@@ -5,7 +5,7 @@ Collection of digital signal processing packages for Broad-Energy Germanium (BEG
 Open up your terminal and clone the repository locally
 ```
 $ mkdir ~/work>/dev/null 2>&1 && cd ~/work
-$ git clone git@github.com:giachero/agpy.git
+$ git clone git@github.com:giachero/BEGepro.git
 ```
 
 ### Create an isolated Python3 environment
@@ -53,9 +53,9 @@ $ git clone git@github.com:giachero/agpy.git
 ### Set the PYTHONPATH environment variable
 `PYTHONPATH` is a [python environment variable](https://docs.python.org/3/using/cmdline.html#environment-variables) containing directories that should be searched for modules and packages when using ```import```. If ```PYTHONPATH``` is set, Python will include the directories in ```sys.path``` for searching.  
 
-The project can be imported in python by setting the `PYTHONPATH` environment variable. Thi is possinle by sourcing the `setup.sh` script
+The project can be imported in python by setting the `PYTHONPATH` environment variable. Thi is possible by sourcing the `setup.sh` script
 
 ```bash
-(venv3.7) $ . ~/work/agpy/setup.sh
+(venv3.7) $ . ~/work/BEGepro/setup.sh
 ```
 
