@@ -35,7 +35,7 @@ $ git clone git@github.com:giachero/BEGepro.git
     
  5. Use ```requirements.txt``` file to install all dependencies for a basilar python3 installation
     ```bash
-    (venv3.7) $ pip install -r ~/work/agpy/equirements.txt 
+    (venv3.7) $ pip install -r ~/work/BEGepro/requirements.txt 
     ```
     This installs also the Matplotlib plotting library that needs tkinter to work properly.  
     According with your python3 version (in Ubuntu), install the tkinter library for python3 as follow
