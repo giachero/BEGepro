@@ -1,2 +1,61 @@
 # BEGepro
 Collection of digital signal processing packages for Broad-Energy Germanium (BEGe) detectors
+
+### Clone the repository locally
+Open up your terminal and clone the repository locally
+```
+$ mkdir ~/work>/dev/null 2>&1 && cd ~/work
+$ git clone git@github.com:giachero/agpy.git
+```
+
+### Create an isolated Python3 environment
+1. Install the ```virtualenv``` tool with pip:
+   ```bash
+   $ pip install virtualenv
+   ```
+2. Create a new directory to work with:
+   ```bash
+   $ mkdir ~/pvenv>/dev/null 2>&1 && cd ~/pvenv
+   ```
+ 3. Create a new virtual environment inside the directory
+    ```bash
+    $ virtualenv -p `which python3.6` ~/pvenv/venv3.6
+    ```
+    or 
+    
+    ```bash
+    $ virtualenv -p `which python3.7` ~/pvenv/venv3.7
+    ```
+ 4. Activate the isolated environment
+    ```bash
+    $ source ~/pvenv/venv3.7/bin/activate
+    (venv3.7) $ 
+    ```
+    Notice how your prompt is now prefixed with the name of your environment.
+    
+ 5. Use ```requirements.txt``` file to install all dependencies for a basilar python3 installation
+    ```bash
+    (venv3.7) $ pip install -r ~/work/agpy/equirements.txt 
+    ```
+    This installs also the Matplotlib plotting library that needs tkinter to work properly.  
+    According with your python3 version (in Ubuntu), install the tkinter library for python3 as follow
+    ```
+    (venv3.7) $ sudo apt-get install python3-tk
+    (venv3.7) $ sudo apt-get install python3.5-tk
+    (venv3.7) $ sudo apt-get install python3.6-tk
+    (venv3.7) $ sudo apt-get install python3.7-tk
+    ```
+  6. To exit the isolated environment
+  ```bash
+  (venv3.7) $ deactivate
+  ```
+    
+### Set the PYTHONPATH environment variable
+`PYTHONPATH` is a [python environment variable](https://docs.python.org/3/using/cmdline.html#environment-variables) containing directories that should be searched for modules and packages when using ```import```. If ```PYTHONPATH``` is set, Python will include the directories in ```sys.path``` for searching.  
+
+The project can be imported in python by setting the `PYTHONPATH` environment variable. Thi is possinle by sourcing the `setup.sh` script
+
+```bash
+(venv3.7) $ . ~/work/agpy/setup.sh
+```
+
