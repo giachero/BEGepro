@@ -1,5 +1,5 @@
 # BEGepro
-Collection of digital signal processing packages for Broad-Energy Germanium (BEGe) detectors
+Collection of digital signal processing packages for analyzing data from Broad-Energy Germanium (BEGe) detectors
 
 ### Clone the repository locally
 Open up your terminal and clone the repository locally
