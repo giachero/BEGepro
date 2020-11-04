@@ -59,3 +59,6 @@ The project can be imported in python by setting the `PYTHONPATH` environment va
 (venv3.7) $ . ~/work/BEGepro/setup.sh
 ```
 
+### Documentation
+* Structuring Your Projec in python, from (docs.python-guide.or)[https://docs.python-guide.org/writing/structure/] and from (Ken Reitz's site)[https://kenreitz.org/essays/repository-structure-and-python]. Github example (here)[https://github.com/navdeep-G/samplemod]. 
+
