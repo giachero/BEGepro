@@ -49,6 +49,13 @@ $ git clone git@github.com:giachero/BEGepro.git
   (begenv3.7) $ deactivate
   ```
     
+### Install the package in your isolated enviroment
+Launch the installating script
+
+```bash
+(begenv3.7) python setup.py install
+```
+
 ### Set the PYTHONPATH environment variable
 `PYTHONPATH` is a [python environment variable](https://docs.python.org/3/using/cmdline.html#environment-variables) containing directories that should be searched for modules and packages when using ```import```. If ```PYTHONPATH``` is set, Python will include the directories in ```sys.path``` for searching.  
 
