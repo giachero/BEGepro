@@ -19,35 +19,34 @@ $ git clone git@github.com:giachero/BEGepro.git
    ```
  3. Create a new virtual environment inside the directory
     ```bash
-    $ virtualenv -p `which python3.6` ~/pvenv/venv3.6
+    $ virtualenv -p `which python3.6` ~/pvenv/begenv3.6
     ```
     or 
     
     ```bash
-    $ virtualenv -p `which python3.7` ~/pvenv/venv3.7
+    $ virtualenv -p `which python3.7` ~/pvenv/begenv3.7
     ```
  4. Activate the isolated environment
     ```bash
-    $ source ~/pvenv/venv3.7/bin/activate
-    (venv3.7) $ 
+    $ source ~/pvenv/begenv3.7/bin/activate
+    (begenv3.7) $ 
     ```
     Notice how your prompt is now prefixed with the name of your environment.
     
  5. Use ```requirements.txt``` file to install all dependencies for a basilar python3 installation
     ```bash
-    (venv3.7) $ pip install -r ~/work/BEGepro/requirements.txt 
+    (begenv3.7) $ pip install -r ~/work/BEGepro/requirements.txt 
     ```
     This installs also the Matplotlib plotting library that needs tkinter to work properly.  
     According with your python3 version (in Ubuntu), install the tkinter library for python3 as follow
     ```
-    (venv3.7) $ sudo apt-get install python3-tk
-    (venv3.7) $ sudo apt-get install python3.5-tk
-    (venv3.7) $ sudo apt-get install python3.6-tk
-    (venv3.7) $ sudo apt-get install python3.7-tk
+    (begenv3.7) $ sudo apt-get install python3-tk
+    (begenv3.6) $ sudo apt-get install python3.6-tk
+    (begenv3.7) $ sudo apt-get install python3.7-tk
     ```
   6. To exit the isolated environment
   ```bash
-  (venv3.7) $ deactivate
+  (begenv3.7) $ deactivate
   ```
     
 ### Set the PYTHONPATH environment variable
