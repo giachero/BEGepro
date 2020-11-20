@@ -16,10 +16,8 @@ pathmunge () {
 }
 
 
-AGPATH=$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
-pathmunge PYTHONPATH $AGPATH/src
-#pathmunge PATH $AGPATH/bin
-#pathmunge PATH $AGPATH/scripts
+BEGEPATH=$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
+pathmunge PYTHONPATH $BEGEPATH/src
 
 export PYTHONPATH=$PYTHONPATH
 #export PATH=$PATH
