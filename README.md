@@ -53,7 +53,8 @@ $ git clone git@github.com:giachero/BEGepro.git
 Launch the installating script
 
 ```bash
-(begenv3.7) python setup.py install
+(begenv3.7) $ cd ~/work/BEGepro/ 
+(begenv3.7) $ python setup.py install
 ```
 
 ### Set the PYTHONPATH environment variable
