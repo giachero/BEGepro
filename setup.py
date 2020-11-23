@@ -8,7 +8,7 @@ def read(fname):
 
 setup( # Finally, pass this all along to distutils to do the heavy lifting.
     name             = 'begepro',
-    version          = '0.0.0',
+    version          = '0.0.1',
     description      = 'Package for analyzing data from BEGe detectors',
     long_description = read('README.md'),
     author           = 'Andrea Giachero, Alessandro Paonessa, Massimiliano Nastasi ',
@@ -16,6 +16,8 @@ setup( # Finally, pass this all along to distutils to do the heavy lifting.
     url              = 'https://github.com/giachero/BEGepro',
     license          = read('LICENSE'),
     install_requires = read('requirements.txt').splitlines(),
-    package_dir      = {"": "src"}
-    packages         = find_packages(where='src', exclude=('tests', 'notebooks'))
+    package_dir      = {'': '.'},
+    packages         = find_packages(where='.', exclude=('tests', 'notebooks')),
+    python_requires  = '>=3.5', 
+    zip_safe         = False,
 )
