@@ -67,5 +67,6 @@ The project can be imported in python by setting the `PYTHONPATH` environment va
 ```
 
 ### Documentation
-* Structuring Your Projec in python, from [docs.python-guide.or](https://docs.python-guide.org/writing/structure/) and from [Ken Reitz's site](https://kenreitz.org/essays/repository-structure-and-python). Github example [here](https://github.com/navdeep-G/samplemod). 
+* Structuring Your Project in python, from [docs.python-guide.or](https://docs.python-guide.org/writing/structure/) and from [Ken Reitz's site](https://kenreitz.org/essays/repository-structure-and-python). Github example [here](https://github.com/navdeep-G/samplemod). 
+* Making a Python Package, from [readthedocs.io](https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html)
 
