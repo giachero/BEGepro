@@ -57,15 +57,6 @@ Launch the installating script
 (begenv3.7) $ python setup.py install
 ```
 
-### Set the PYTHONPATH environment variable
-`PYTHONPATH` is a [python environment variable](https://docs.python.org/3/using/cmdline.html#environment-variables) containing directories that should be searched for modules and packages when using ```import```. If ```PYTHONPATH``` is set, Python will include the directories in ```sys.path``` for searching.  
-
-The project can be imported in python by setting the `PYTHONPATH` environment variable. Thi is possible by sourcing the `setup.sh` script
-
-```bash
-(venv3.7) $ . ~/work/BEGepro/setup.sh
-```
-
 ### Documentation
 * Structuring Your Project in python, from [docs.python-guide.or](https://docs.python-guide.org/writing/structure/) and from [Ken Reitz's site](https://kenreitz.org/essays/repository-structure-and-python). Github example [here](https://github.com/navdeep-G/samplemod). 
 * Making a Python Package, from [readthedocs.io](https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html)
