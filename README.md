@@ -64,6 +64,16 @@ To install the packages for usage purpose wihtout the possibility to develop/mod
 (begenv3.7) $ python setup.py install
 ```
 
+To check if the begepro package is installed
+```bash
+(begenv3.7) $ pip freeze | grep begepro
+```
+and the ouput must be similar to
+```bash
+begepro==0.0.1
+```
+
+
 To uninstall the packages
 ```bash
 (begenv3.7) $ cd ~/work/BEGepro/ 
