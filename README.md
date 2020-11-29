@@ -64,6 +64,15 @@ To install the packages for usage purpose wihtout the possibility to develop/mod
 (begenv3.7) $ python setup.py install
 ```
 
+To uninstall the packages
+```bash
+(begenv3.7) $ cd ~/work/BEGepro/ 
+(begenv3.7) $ rm -rf build/ dist/ begepro.egg-info
+(begenv3.7) $ pip uninstall begepro
+```
+
+
+
 ### Documentation
 * Structuring Your Project in python, from [docs.python-guide.or](https://docs.python-guide.org/writing/structure/) and from [Ken Reitz's site](https://kenreitz.org/essays/repository-structure-and-python). Github example [here](https://github.com/navdeep-G/samplemod). 
 * Making a Python Package, from [readthedocs.io](https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html)
