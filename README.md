@@ -49,7 +49,7 @@ $ git clone git@github.com:giachero/BEGepro.git
   (begenv3.7) $ deactivate
   ```
     
-### Install the package in your isolated enviroment
+### Install the begepro package in your isolated enviroment
 
 To install the package and then then being able to edit and update the code 
 ```bash
