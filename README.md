@@ -52,15 +52,13 @@ $ git clone git@github.com:giachero/BEGepro.git
 ### Install the package in your isolated enviroment
 
 To install the package and then then being able to edit and update the code 
-
 ```bash
-(begenv3.7) $ cd ~/work/BEGepro/ 
+(begenv3.7) $ cd ~/work/BEGepro/
+begenv3.7) $ python setup.py develop
 ```
-The develop will not install the package but it will create a .egg-link in the deployment directory back to the project source code directory
+The ```develop``` option will not install the package but it will create a .egg-link in the deployment directory back to the project source code directory.  
 
-To install the packages for usage purpose wihtout the possibilit to develop/modify/debug it
-
-
+To install the packages for usage purpose wihtout the possibility to develop/modify/debug it
 ```bash
 (begenv3.7) $ cd ~/work/BEGepro/ 
 (begenv3.7) $ python setup.py install
