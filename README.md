@@ -54,7 +54,7 @@ $ git clone git@github.com:giachero/BEGepro.git
 To install the package and then then being able to edit and update the code 
 ```bash
 (begenv3.7) $ cd ~/work/BEGepro/
-begenv3.7) $ python setup.py develop
+(begenv3.7) $ python setup.py develop
 ```
 The ```develop``` option will not install the package but it will create a .egg-link in the deployment directory back to the project source code directory.  
 
@@ -68,7 +68,7 @@ To check if the begepro package is installed
 ```bash
 (begenv3.7) $ pip freeze | grep begepro
 ```
-and the ouput must be similar to
+and the ouput must be something similar to
 ```bash
 begepro==0.0.1
 ```
