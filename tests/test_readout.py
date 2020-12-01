@@ -2,41 +2,47 @@
 
 import numpy as np
 import pylab as plt
-import IPython,os
+import IPython, os, sys
 import argparse
 
-from rw import DT5751read
+from begepro.rw import CAENhandler
 
 
 def main():
 
-    usage='./test_readout.py --file /path/where/the/file/is/filenane'
-    parser = argparse.ArgumentParser(description='Test script to read data from xml files created by the CAEN DT5751 digitizer', usage=usage)
+    # Check for arguments
+    if len(sys.argv[1:]) == 0:
+        parser.error('No argument given!')
+        return 
 
-    parser.add_argument("-f", "--file", dest="ifile", help="Input file",          required = True)
-    parser.add_argument("-n", "--numb", dest="numb",  help="Number of read file", required = True)
+    usage='./test_readout.py --file /path/where/the/file/is/filenane'
+    parser = argparse.ArgumentParser(description='Test script to read data from xml files created by the CAEN desktop digitizer', usage=usage)
+
+    parser.add_argument("-f", "--file"   , dest="ifile", type=str,  help="Input file",                required = True)
+    parser.add_argument("-c", "--ch"     , dest="ch",    type=int,  help="Channel to analyze",        default  = 0)
+    parser.add_argument("-n", "--nevents", dest="nevs",  type=int,  help="First n events to analyze", default  = None)
+    
     args = parser.parse_args()
 
     
-    dr=DT5751read.DT5751reader(filename) 
+    dr=CAENhandler.XMLreader(args.ifile) 
 
     Mm=list()
 
     ch=1
     
     while True:
-        #for i in range(0, 10000):
         data=dr.get()
-        if data is None: #or len(Mm)==100:
+        if data is None or (args.nevs is not None and len(Mm)==args.nevs): #or len(Mm)==100:
             break
         
         if ch in data['channels']:
-            Mm.append(np.max(data['channels'][ch])-np.min(data['channels'][ch]))
+            Mm.append(np.max(data['channels'][args.ch])-np.min(data['channels'][args.ch]))
 
 
     print (len(Mm))
 
-    np.savetxt(os.path.splitext(filename)[0]+'_Mn.dat', Mm, fmt='%10.3f')
+    np.savetxt(os.path.splitext(args.ifile)[0]+'_Mn.dat', Mm, fmt='%10.3f')
     
     #plt.plot(data[ch])
                 

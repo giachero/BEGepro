@@ -1,4 +1,4 @@
-from begepro import rw
+from begepro import rw, dspro
 
 
 def version():
