@@ -1,3 +1,9 @@
+import numpy as np
+import scipy.signal as sgn
+import scipy.constants as cnt
+import math
+
+
 def moving_average(array, window, n=1):
     ker = (1/window) * sgn.windows.boxcar(window)
     ret = sgn.convolve(array, ker)
