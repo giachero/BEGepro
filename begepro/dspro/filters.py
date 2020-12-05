@@ -9,15 +9,11 @@ def moving_average(array, window, n=1):
     ret = sgn.convolve(array, ker)
     if n > 1:
         for i in range(n-1): ret = sgn.convolve(ret, ker)
-    return ret
+    return ret[n*window:array.shape[0]]
 
 def gaussian_filter(array, sigma):
     ker = (1 / (math.sqrt(2*cnt.pi)*sigma)) * sgn.windows.gaussian(10*sigma, sigma)
-    ret = sgn.convolve(array, ker)
-    return ret
+    return sgn.convolve(array, ker)
 
 def delayed_diff(array, delta):
-    arr1 = np.pad(array, (delta,0))
-    arr2 = np.pad(array, (0,delta))
-    ret = arr2 - arr1
-    return ret[:-delta]
+    return (np.pad(array, (delta,0), mode='constant') - np.pad(array, (0,delta), mode='constant'))[delta:-delta]
