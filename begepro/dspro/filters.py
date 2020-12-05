@@ -16,4 +16,4 @@ def gaussian_filter(array, sigma):
     return sgn.convolve(array, ker)
 
 def delayed_diff(array, delta):
-    return (np.pad(array, (delta,0), mode='constant') - np.pad(array, (0,delta), mode='constant'))[delta:-delta]
+    return (np.pad(array, (0,delta), mode='constant') - np.pad(array, (delta,0), mode='constant'))[delta:-delta]
