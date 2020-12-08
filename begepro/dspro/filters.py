@@ -17,3 +17,6 @@ def gaussian_filter(array, sigma):
 
 def delayed_diff(array, delta):
     return (np.pad(array, (0,delta), mode='constant') - np.pad(array, (delta,0), mode='constant'))[delta:-delta]
+
+def sg_filter(array, window, polyorder, deriv=0):
+    return sgn.savgol_filter(array, window, polyorder, deriv)
