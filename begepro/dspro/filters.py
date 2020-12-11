@@ -20,3 +20,6 @@ def delayed_diff(array, delta):
 
 def sg_filter(array, window, polyorder, deriv=0):
     return sgn.savgol_filter(array, window, polyorder, deriv)
+
+def pz_corr(array, tau=11000):
+    return (np.pad(array, (0,1)) + np.pad(np.cumsum(array), (1,0))/tau)[1:-1]
