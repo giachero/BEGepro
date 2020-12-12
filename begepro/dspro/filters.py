@@ -15,6 +15,10 @@ def gaussian_filter(array, sigma):
     ker = (1 / (math.sqrt(2*cnt.pi)*sigma)) * sgn.windows.gaussian(10*sigma, sigma)
     return sgn.convolve(array, ker)
 
+def gengauss_filter(array, sigma, p):
+    ker = (p/(2**(1/(2*p))*sigma*math.gamma(1/(2*p)))) * sgn.windows.general_gaussian(10*sigma, p, sigma)
+    return sgn.convolve(array, ker)
+
 def delayed_diff(array, delta):
     return (np.pad(array, (0,delta), mode='constant') - np.pad(array, (delta,0), mode='constant'))[delta:-delta]
 
