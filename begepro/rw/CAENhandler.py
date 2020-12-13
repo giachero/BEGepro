@@ -105,7 +105,7 @@ class wavedumpReader(object):
         chunk_size = 4; # --> 4 bytes 
         for label in ['size', 'boardid', 'pattern', 'ch', 'counter', 'ttag']:
             bread = self.__f.read(chunk_size);
-            if not bread: return None, None 
+            if not bread: return None 
             ev.update({label:struct.unpack('I', bread)[0]})
 
 
