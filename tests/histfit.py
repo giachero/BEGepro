@@ -22,16 +22,18 @@ class HistogramFitter (object):
         self.__y = countsperbin
         
         self.__f = None
-        self.__xmin, self.__xmax = self.__x[0], self.__x[-1]
+        self.__xlim = self.__x[0], self.__x[-1]
         self.__pars = {}
         
         return
     
-    def set_model(self, f, xmin=None, xmax=None, initpars=None):
+    def set_model(self, f, xlim=None, initpars=None):
         
         self.__f = f
-        if xmin is not None and xmax is not None: 
-            self.__xmin, self.__xmax = xmin, xmax
+        
+        if xlim is not None: 
+            self.__xlim = xlim
+        
         self.__pars.clear()
         
         for par in get_fnc_args(self.__f):
@@ -71,7 +73,7 @@ class HistogramFitter (object):
         
         p0 = [self.__pars[par]['value'] for par in self.__pars]
 
-        xdata, ydata = get_nonzero_xy(self.__x, self.__y, self.__xmin, self.__xmax)
+        xdata, ydata = get_nonzero_xy(self.__x, self.__y, self.__xlim)
         eydata = np.sqrt(ydata)
                 
         popt, pcov = opt.curve_fit(f              = self.__f,
@@ -97,8 +99,16 @@ class HistogramFitter (object):
             
         return ret
     
-    def plot_fit(self, nop=1000):
+    def basicplot(self):
         popt = [self.__pars[par]['opt_value'] for par in self.__pars]
-        xdraw = np.linspace(self.__xmin, self.__xmax, num=nop)
-        plt.plot(xdraw, self.__f(xdraw, *popt))  
+        xfnc = np.linspace(self.__xlim[0], self.__xlim[1], num=1000)
+        plt.plot(xfnc, self.__f(xfnc, *popt))
         return
+    
+    def infoplot(self, xlim=None, nop=1000):
+        if xlim is None:
+            xlim = self.__xlim
+        popt = [self.__pars[par]['opt_value'] for par in self.__pars]
+        xfnc = np.linspace(xlim[0], xlim[1], num=nop)
+        yfnc = self.__f(xfnc, *popt)
+        return {'x': xfnc, 'y': yfnc}
