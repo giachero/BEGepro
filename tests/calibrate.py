@@ -25,7 +25,7 @@ class EnergyCalibration(object):
         self.__pulseheights = pulseheights
         
         self.__stden = dict()
-        with open('../en_res/calibration_energies.json', 'r') as f:
+        with open('calibration_energies.json', 'r') as f:
             self.__stden = json.load(f)
         
         self.__fnc = quad
