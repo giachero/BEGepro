@@ -8,8 +8,8 @@ def get_fnc_args(fnc):
     import inspect
     return inspect.getfullargspec(fnc)[0]
 
-def get_nonzero_xy(xdata, ydata, xmin, xmax):
-    interval = np.nonzero((xdata>=xmin) & (xdata<=xmax))[0]
+def get_nonzero_xy(xdata, ydata, xlim):
+    interval = np.nonzero((xdata>=xlim[0]) & (xdata<=xlim[1]))[0]
     nonzero_y_pos = np.nonzero(ydata[interval])[0]
     return xdata[interval][nonzero_y_pos], ydata[interval][nonzero_y_pos]
 
@@ -23,7 +23,7 @@ class HistogramFitter (object):
         
         self.__f = None
         self.__xlim = self.__x[0], self.__x[-1]
-        self.__pars = {}
+        self.__pars = dict()
         
         return
     
@@ -90,7 +90,7 @@ class HistogramFitter (object):
         ret = {'chisq' : chisq,
                'ndf'   : ndf,
                'prob'  : prob,
-               'opt'   : {}}
+               'opt'   : dict()}
                
         for i, par in enumerate(self.__pars):
             self.__pars[par].update({'opt_value'    : popt[i],

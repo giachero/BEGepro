@@ -84,7 +84,7 @@ class EnergyCalibration(object):
         ret = {'chisq': chisq,
                'ndf'  : ndf,
                'prob' : prob,
-               'opt'  : {}}
+               'opt'  : dict()}
         
         for i in range(len(output.beta)):
             ret['opt'].update({'p'+str(i): (output.beta[i], output.sd_beta[i])})
