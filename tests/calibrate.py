@@ -5,7 +5,6 @@ from scipy.stats import chi2
 import sys
 import json
 
-
 def lin(p, x):
     return p[0] + p[1]*x
 
@@ -18,9 +17,13 @@ def cube(p, x):
 def quart(p, x):
     return p[0] + p[1]*x + p[2]*x**2 + p[3]*x**3 + p[4]*x**4
 
+polyorder = {'lin'  : lin,
+             'quad' : quad,
+             'cube' : cube,
+             'quart': quart}
 
 class EnergyCalibration(object):
-    
+
     def __init__(self, pulseheights):
         
         self.__pulseheights = pulseheights
@@ -29,7 +32,7 @@ class EnergyCalibration(object):
         with open('calibration_energies.json', 'r') as f:
             self.__stden = json.load(f)
         
-        self.__fnc = quad
+        self.__fnc = polyorder['quad']
         self.__pars = [1.,1.,1.]
         
         self.__x = list()
@@ -49,7 +52,10 @@ class EnergyCalibration(object):
         return
 
     def set_model(self, fnc, initpars=None):
-        self.__fnc = fnc
+        if fnc in polyorder:
+            self.__fnc = polyorder[fnc]
+        else:
+            self.__fnc = fnc
         if initpars is not None:
             self.__pars = initpars
         return
