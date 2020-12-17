@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.odr as odr
 from scipy.stats import chi2
-from sys.stdout import write
+import sys
 
 
 def lin(p, x):

@@ -14,3 +14,4 @@ pandas>=1.1
 ipython>=7.13
 jupyterlab>=2.0
 lxml>=4.5
+ipympl>=0.5.8
