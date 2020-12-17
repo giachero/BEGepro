@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.odr as odr
 from scipy.stats import chi2
 import sys
+import json
 
 
 def lin(p, x):
