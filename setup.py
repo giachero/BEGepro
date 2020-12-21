@@ -18,6 +18,6 @@ setup( # Finally, pass this all along to distutils to do the heavy lifting.
     install_requires = read('requirements.txt').splitlines(),
     package_dir      = {'': '.'},
     packages         = find_packages(where='.', exclude=('tests', 'notebooks')),
-    python_requires  = '>=3.5', 
+    python_requires  = '>=3.7', 
     zip_safe         = False,
 )
