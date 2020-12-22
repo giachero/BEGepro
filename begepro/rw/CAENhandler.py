@@ -2,6 +2,8 @@ import os, errno
 import struct
 import pylab as plt
 
+from sys import getsizeof
+
 from lxml import etree as ET
 
 class XMLreader(object):
@@ -48,8 +50,8 @@ class Debug(object):
 
     
 
-class wavedumpReader(object):
-    def __init__(self,filename):
+class binaryReader(object):
+    def __init__(self, filename):
         
         if not os.path.isfile(filename):
             print(('Filename',filename,'does not exist'))
@@ -79,15 +81,45 @@ class wavedumpReader(object):
         if self.__f:
             self.close()
         return
+
+    def get_filename(self):
+        return self.__filename
+
+    def get_handler(self):
+        return self.__f
     
-    def set_debug(self, code=2):
+    def set_debug(self, code=Debug.PLOT_DATA):
         '''
         code = 0 : no debug
-        code = 1 : update plot every 1000 events
-        cpde = 2 : update plot every time 
+        code = 1 : update update plot every time 
+        cpde = 2 : 
         '''
         self.__isdebug=code;
+        return 
+
+    def get_debug(self):
+        return self.__isdebug
+    
+    def get(self):
+        '''
+        get method virtual interface
+        '''
+        pass
+
+    def __read_data(self, nsamples, form, chunk_size):
+
+        event=list();
+        for i in range(0, int(nsamples)):
+            event.append(struct.unpack(form, self.get_handler().read(chunk_size))[0])
+            
+        return event 
+    
+    
+class wavedumpReader(binaryReader):
+    def __init__(self, filename):
+        super().__init__(filename)
         return
+    
 
     def get(self):
         
@@ -102,33 +134,75 @@ class wavedumpReader(object):
         <header4> (32 bit --> 4 bytes) Event Counter
         <header5> (32 bit --> 4 bytes) Trigger Time Tag
         '''
+
+        # Read header
         chunk_size = 4; # --> 4 bytes 
         for label in ['size', 'boardid', 'pattern', 'ch', 'counter', 'ttag']:
-            bread = self.__f.read(chunk_size);
+            bread = self.get_handler().read(chunk_size);
             if not bread: return None 
             ev.update({label:struct.unpack('I', bread)[0]})
 
+        ev.update({'evsize': int((ev['size']-(6*chunk_size))/2)})
 
-        ev.update({'evsize':int((ev['size']-(6*chunk_size))/2)})
-
-        '''
+        # Read data
+        ev.update({'trace': self._binaryReader__read_data(int(ev['evsize']), 'H', 2)})
         
-        '''
-        event=list();
-        chunk_size = 2; 
-        for i in range(0, int(ev['evsize'])):
-            event.append(struct.unpack('H', self.__f.read(chunk_size))[0])
-
-        ev.update({'trace':event})
-        
-        if self.__isdebug is not Debug.NO_DEBUG:
-            plt.ion();
-            plt.clf()
-            plt.plot(ev['trace'])
-            plt.xlabel(r'Time [Samples]')
-            plt.ylabel(r'Amplitude [ADC count]')
-            plt.grid(True)
-            plt.show()
-
+        # Plot datax
+        if self.get_debug() is not Debug.NO_DEBUG and 'trace' in ev:
+            plot_trace(ev['trace'])
             
         return ev;
+
+
+    
+class compassReader(binaryReader):
+    def __init__(self, filename):
+        super().__init__(filename)
+        return
+
+    
+    def get(self):
+        
+        ev=dict()
+        
+        '''
+        The HEADER is so composed:
+        <header0> (16 bit --> 2 bytes) Board ID (int)
+        <header1> (16 bit --> 2 bytes) Channel (int)
+        <header2> (64 bit --> 8 bytes) Timestamp in ps (int)
+        <header3> (16 bit --> 2 bytes) Energy in channel (int)
+        <header4> (16 bit --> 2 bytes) Energy short (int)
+        <header5> (32 bit --> 4 bytes) Flag (bit‐by‐bit, 32 bit)
+        <header6> (32 bit --> 4 bytes) Number of Wave samples to be read (int)
+        '''
+
+        # Read header
+        for label, chunk_size, form in zip(['board', 'channel', 'ttag', 'energy', 'flag' , 'evsize'],
+                                     [2, 2, 8, 2, 4, 4],
+                                     ['H', 'H' , 'Q', 'H', 'I', 'I']):
+            bread = self.get_handler().read(chunk_size);
+            if not bread: return None 
+            ev.update({label:struct.unpack(form, bread)[0]})
+            
+        # Read data
+        ev.update({'trace': self._binaryReader__read_data(int(ev['evsize']), 'H', 2)})
+        
+        if self.get_debug() is not Debug.NO_DEBUG and 'trace' in ev:
+            plot_trace(ev['trace'])
+
+        return ev
+
+
+
+def plot_trace(trace):
+
+    plt.ion();
+    plt.clf()
+    plt.plot(trace)
+    plt.xlabel(r'Time [Samples]')
+    plt.ylabel(r'Amplitude [ADC count]')
+    plt.grid(True)
+    plt.show()
+
+    
+    return 
