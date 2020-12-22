@@ -118,6 +118,7 @@ class binaryReader(object):
 class wavedumpReader(binaryReader):
     def __init__(self, filename):
         super().__init__(filename)
+
         return
     
 
@@ -147,7 +148,7 @@ class wavedumpReader(binaryReader):
         # Read data
         ev.update({'trace': self._binaryReader__read_data(int(ev['evsize']), 'H', 2)})
         
-        # Plot datax
+        # Plot data
         if self.get_debug() is not Debug.NO_DEBUG and 'trace' in ev:
             plot_trace(ev['trace'])
             
@@ -159,7 +160,7 @@ class compassReader(binaryReader):
     def __init__(self, filename):
         super().__init__(filename)
         return
-
+    
     
     def get(self):
         
@@ -186,7 +187,8 @@ class compassReader(binaryReader):
             
         # Read data
         ev.update({'trace': self._binaryReader__read_data(int(ev['evsize']), 'H', 2)})
-        
+
+        # Plot data
         if self.get_debug() is not Debug.NO_DEBUG and 'trace' in ev:
             plot_trace(ev['trace'])
 
