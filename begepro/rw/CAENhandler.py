@@ -185,8 +185,8 @@ class compassReader(binaryReader):
         '''
 
         # Read header
-        label      = ['board', 'channel', 'ttag', 'energy', 'flag' , 'evsize'] if not self.__iscal else \
-                     ['board', 'channel', 'ttag', 'energy', 'energycal', 'flag' , 'evsize'] 
+        label      = ['board', 'channel', 'ttag', 'pulseheight', 'flag' , 'evsize'] if not self.__iscal else \
+                     ['board', 'channel', 'ttag', 'pulseheight', 'energy', 'flag' , 'evsize']
         chuck_size = [2, 2, 8, 2, 4, 4] if not self.__iscal else \
                      [2, 2, 8, 2, 8, 4, 4] 
         form       = ['H', 'H' , 'Q', 'H', 'I', 'I'] if not self.__iscal else \
