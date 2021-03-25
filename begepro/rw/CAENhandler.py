@@ -48,7 +48,6 @@ class Debug(object):
     NO_DEBUG  = 0
     PLOT_DATA = 1
 
-    
 
 class binaryReader(object):
     def __init__(self, filename):
@@ -157,8 +156,11 @@ class wavedumpReader(binaryReader):
 
     
 class compassReader(binaryReader):
-    def __init__(self, filename):
+    def __init__(self, filename, calibrated=False):
         super().__init__(filename)
+
+        self.__iscal=bool(calibrated)
+
         return
     
     
@@ -168,22 +170,31 @@ class compassReader(binaryReader):
         
         '''
         The HEADER is so composed:
-        <header0> (16 bit --> 2 bytes) Board ID (int)
-        <header1> (16 bit --> 2 bytes) Channel (int)
-        <header2> (64 bit --> 8 bytes) Timestamp in ps (int)
-        <header3> (16 bit --> 2 bytes) Energy in channel (int)
-        <header4> (16 bit --> 2 bytes) Energy short (int)
-        <header5> (32 bit --> 4 bytes) Flag (bit‐by‐bit, 32 bit)
-        <header6> (32 bit --> 4 bytes) Number of Wave samples to be read (int)
+        <header0>  (16 bit --> 2 bytes) Board ID (int)
+        <header1>  (16 bit --> 2 bytes) Channel (int)
+        <header2>  (64 bit --> 8 bytes) Timestamp in ps (int)
+        <header3>  (16 bit --> 2 bytes) Energy in channel (int)
+        <header3b> (64 bit --> 8 bytes) Energy in keV/MeV (double)
+        <header4>  (16 bit --> 2 bytes) Energy short (int)
+        <header5>  (32 bit --> 4 bytes) Flag (bit-by-bit, 32 bit)
+        <header6>  (32 bit --> 4 bytes) Number of Wave samples to be read (int)
+        
+
+        Interpret bytes as packed binary data
+        https://docs.python.org/3/library/struct.html
         '''
 
         # Read header
-        for label, chunk_size, form in zip(['board', 'channel', 'ttag', 'energy', 'flag' , 'evsize'],
-                                     [2, 2, 8, 2, 4, 4],
-                                     ['H', 'H' , 'Q', 'H', 'I', 'I']):
-            bread = self.get_handler().read(chunk_size);
+        label      = ['board', 'channel', 'ttag', 'energy', 'flag' , 'evsize'] if not self.__iscal else \
+                     ['board', 'channel', 'ttag', 'energy', 'energycal', 'flag' , 'evsize'] 
+        chuck_size = [2, 2, 8, 2, 4, 4] if not self.__iscal else \
+                     [2, 2, 8, 2, 8, 4, 4] 
+        form       = ['H', 'H' , 'Q', 'H', 'I', 'I'] if not self.__iscal else \
+                     ['H', 'H' , 'Q', 'H', 'd', 'I', 'I']
+        for l, c, f in zip(label, chuck_size, form):
+            bread = self.get_handler().read(c);
             if not bread: return None 
-            ev.update({label:struct.unpack(form, bread)[0]})
+            ev.update({l:struct.unpack(f, bread)[0]})
             
         # Read data
         ev.update({'trace': self._binaryReader__read_data(int(ev['evsize']), 'H', 2)})
