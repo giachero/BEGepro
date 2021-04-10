@@ -25,8 +25,9 @@ def trap_filter(array, rt, ft):
 def delayed_diff(array, delta):
     return (np.pad(array, (0,delta), mode='constant') - np.pad(array, (delta,0), mode='constant'))[delta:-delta]
 
-def sg_filter(array, window, polyorder, deriv=0):
-    return sgn.savgol_filter(array, window, polyorder, deriv=deriv)
+def curr_filter(array):
+    temp = sgn.savgol_filter(array, 19, 2)
+    return sgn.savgol_filter(temp, 13, 2, deriv=1)
 
 def pz_corr(array, tau=11000):
     return (np.pad(array, (0,1)) + np.pad(np.cumsum(array), (1,0))/tau)[1:-1]
