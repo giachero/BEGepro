@@ -1,39 +1,24 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.odr as odr
-from scipy.stats import chi2
 import sys
 import json
+from scipy.stats import chi2
 
-def lin(p, x):
-    return p[0] + p[1]*x
+import functions
 
-def quad(p, x):
-    return p[0] + p[1]*x + p[2]*x**2 
-
-def cube(p, x):
-    return p[0] + p[1]*x + p[2]*x**2 + p[3]*x**3
-
-def quart(p, x):
-    return p[0] + p[1]*x + p[2]*x**2 + p[3]*x**3 + p[4]*x**4
-
-polyorder = {'lin'  : lin,
-             'quad' : quad,
-             'cube' : cube,
-             'quart': quart}
 
 class EnergyCalibration(object):
 
     def __init__(self, pulseheights):
-        
         self.__pulseheights = pulseheights
         
         self.__stden = dict()
         with open('calibration_energies.json', 'r') as f:
             self.__stden = json.load(f)
         
-        self.__fnc = polyorder['quad']
-        self.__pars = [1.,1.,1.]
+        self.__fnc = functions.polyorder['quad'][0]
+        self.__pars = [1., 1., 1.]
         
         self.__x = list()
         self.__y = list()
@@ -47,17 +32,15 @@ class EnergyCalibration(object):
                 self.__ex.append(self.__pulseheights[isotope][1])
                 self.__ey.append(self.__stden[isotope][1])
             else:
-                write('No standard energy found for {isotope} --- I will not use it'.format(isotope=isotope))  
-        
+                sys.stdout.write('No standard energy found for {isotope} --- I will not use it'.format(isotope=isotope))  
         return
 
-    def set_model(self, fnc, initpars=None):
-        if fnc in polyorder:
-            self.__fnc = polyorder[fnc]
-        else:
-            self.__fnc = fnc
+    def set_polyorder(self, fnc, initpars=None):
+        self.__fnc = functions.polyorder[fnc][0]
         if initpars is not None:
             self.__pars = initpars
+        else:
+            self.__pars = [1. for i in range(functions.polyorder[fnc][1])]
         return
             
     def set_parameters(self, initpars):
@@ -68,7 +51,6 @@ class EnergyCalibration(object):
         return self.__pars
         
     def calibrate(self):
-        
         data = odr.RealData(x  = self.__x,
                             y  = self.__y,
                             sx = self.__ex,
@@ -84,21 +66,30 @@ class EnergyCalibration(object):
              
         chisq = output.sum_square
         ndf = round(output.sum_square/output.res_var)
-        prob = chi2.sf(chisq, ndf)
+        pval = chi2.sf(chisq, ndf)
         
         self.__pars = output.beta
         
-        ret = {'chisq': chisq,
-               'ndf'  : ndf,
-               'prob' : prob,
+        ret = {'chisq/ndf': output.res_var,
+               'p-value' : pval,
                'opt'  : dict()}
         
         for i in range(len(output.beta)):
             ret['opt'].update({'p'+str(i): (output.beta[i], output.sd_beta[i])})
-        
         return ret
-    
-    def basicplot(self, xlim=None, nop=1000):
+
+    def apply_cal(self, data=None):
+        ret = np.zeros(2**14+1)
+        aux = np.arange(2**14+1, dtype='float')
+        for i in range(self.__pars.shape[0]):
+            ret += self.__pars[i] * aux**i
+        if data is not None:
+            data[:,1] = 0
+            for i in range(self.__pars.shape[0]):
+                data[:,1] += self.__pars[i] * data[:,0]**i 
+        return ret
+
+    def plot_cal(self, xlim=None, nop=1000):
         if xlim is None: 
             xlim = np.min(self.__x), np.max(self.__x)
         xfnc = np.linspace(xlim[0], xlim[1], num=nop)
@@ -109,7 +100,7 @@ class EnergyCalibration(object):
         plt.title('Energy Calibration')
         return
     
-    def infoplot(self, xlim, nop=1000):
+    def plot_info(self, xlim, nop=1000):
         xfnc = np.linspace(xlim[0], xlim[1], num=nop)
         yfnc = self.__fnc(self.__pars, xfnc)
         ret = {'x' : self.__x,
