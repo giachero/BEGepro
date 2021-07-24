@@ -1,6 +1,8 @@
 import numpy as np
 import os
+import sys
 import math
+import argparse
 from begepro.rw import CAENhandler
 from begepro.dspro import filters as flt
 
@@ -12,22 +14,38 @@ shaped_wf = flt.trap_filter(pz_corr_wf, 500, 250)
 
 def main():
 
-    measureName = '228Th-grafico-tesi-im260421_1'
-    measurePath = '/media/alessandro/Volume/BEGe-DPP/test2/' + measureName + '/FILTERED/DataF_CH1@DT5725SB_10806_' + measureName
+    usage='./reader_test.py --loc /path/where/the/measurement/directory/is/ --meas measurementName --nfiles numberOfFiles'
+    parser = argparse.ArgumentParser(description='Test script to read and analyze BEGe signals from CAEN desktop digitizer', usage=usage)
+
+    # Check for arguments
+    #if len(sys.argv[1:]) == 0:
+    #    parser.error('No argument given!')
+    #    return
+
+    parser.add_argument("-l", "--loc",    dest="dirloc",   type=str, help="Location of measurement directory", required = True)
+    parser.add_argument("-m", "--meas",   dest="measname", type=str, help="Measurement name",                  required = True)
+    parser.add_argument("-n", "--nfiles", dest="nfiles",   type=int, help="Number of files to analyze",        required = True)
+    parser.add_argument("-d", "--dir",    dest="savedir",  type=str, help="Path where to save analysis",       default  = '')
     
-    counter = 0
+    args = parser.parse_args()
+
+    path = args.dirloc + args.measname + '/FILTERED/DataF_CH1@DT5725SB_10806_' + args.measname
 
     ph_list = list()
     e_list = list()
     a_list = list()
     ae_list = list()
 
-    for i in range(265):
+    counter = 0
 
-        if i == 0: rd = CAENhandler.compassReader(measurePath + '.bin', calibrated=True)
-        else: rd = CAENhandler.compassReader(measurePath + '_' + str(i) + '.bin', calibrated=True)
+    print('+++ Start of analysis +++')
 
-        print(measureName + '_' + str(i))
+    for i in range(args.nfiles):
+
+        if i == 0: rd = CAENhandler.compassReader(path + '.bin',                calibrated=True)
+        else:      rd = CAENhandler.compassReader(path + '_' + str(i) + '.bin', calibrated=True)
+
+        print('*** Start of file ' + str(i+1) + '/' + args.nfiles + ' ***')
         
         while True:
 
@@ -47,13 +65,14 @@ def main():
             a_list.append(a)
             ae_list.append(ae)
             
-            #e_list.append(np.max(raw_wf))
-
             counter += 1
             if counter%10000 == 0: print('{sgn} signals processed...'.format(sgn=counter))
 
-    np.save('psd/' + measureName, np.transpose(np.array([ph_list, e_list, a_list, ae_list])))
-    #np.save('muoni/' + measure, np.array(e_list))
+        print('*** End of file ' + str(i+1) + '/' + args.nfiles + ' ***')
+
+    np.save(args.savedir + args.measname, np.transpose(np.array([ph_list, e_list, a_list, ae_list])))
+
+    print('+++ End of analysis +++')
 
     return
 
