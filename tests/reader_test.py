@@ -28,7 +28,7 @@ def main():
 
     counter = 0
 
-    print('+++++ START OF ANALYSIS +++++')
+    print('\n+++++ START OF ANALYSIS +++++\n')
 
     for i in range(args.nfiles):
 
@@ -62,7 +62,7 @@ def main():
 
     np.save(args.savedir + args.measname, np.transpose(np.array([ph_list, e_list, a_list, ae_list])))
 
-    print('+++++ END OF ANALYSIS +++++')
+    print('\n+++++ END OF ANALYSIS +++++\n')
 
     return
 
