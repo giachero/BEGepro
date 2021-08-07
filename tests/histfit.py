@@ -121,8 +121,10 @@ class HistogramFitter (object):
         else:
             return self.__pars['ngaus']['opt_value'], self.__pars['ngaus']['err_opt_value']
 
-    def peak_width(self, left, right, height=0.5):
-        interval = np.nonzero((left <= self.__x) & (self.__x <= right))[0]
+    def peak_width(self, height=0.5, xlim=None):
+        if xlim is None:
+            xlim = self.__xlim
+        interval = np.nonzero((xlim[0] <= self.__x) & (self.__x <= xlim[1]))[0]
         peaks, properties = find_peaks(self.__y[interval], prominence=100, width=[0.5])
         if  peaks.shape[0] == 1:
             width = peak_widths(self.__y[interval], peaks, rel_height=(1-height))
