@@ -38,6 +38,6 @@ def trap_filter(array, rt=500, ft=250, nsample=100, tau=11000):
     pz_corrected = pz_corr(baseline_subtracted, tau=tau)
     return (np.pad(moving_average(pz_corrected, rt), (0, rt+ft)) - np.pad(moving_average(pz_corrected, rt), (rt+ft, 0)))[:-(rt+ft)]
 
-def curr_filter(array):
-    temp = sgn.savgol_filter(array, 19, 2)
-    return sgn.savgol_filter(temp, 13, 2, deriv=1)
+def curr_filter(array, wsmooth=19, dsmooth=2, wdiff=13, ddiff=2):
+    temp = sgn.savgol_filter(array, wsmooth, dsmooth)
+    return sgn.savgol_filter(temp, wdiff, ddiff, deriv=1)
