@@ -9,8 +9,7 @@ import math
 import argparse
 from begepro.rw import CAENhandler
 from begepro.dspro import filters as flt
-import IPython
-
+from begepro.dspro import bege_event as be
 
 def main():
 
@@ -20,17 +19,13 @@ def main():
     parser.add_argument("-l", "--loc",    dest="dirloc",   type=str, help="Location of measurement directory", required = True)
     parser.add_argument("-m", "--meas",   dest="measname", type=str, help="Measurement name",                  required = True)
     parser.add_argument("-n", "--nfiles", dest="nfiles",   type=int, help="Number of files to analyze",        required = True)
-    parser.add_argument("-d", "--dir",    dest="savedir",  type=str, help="Path where to save analysis",       default  = '')
+    parser.add_argument("-d", "--dir",    dest="savedir",  type=str, help="Path where to save analysis",       required = True)
     
     args = parser.parse_args()
 
     path = args.dirloc + args.measname + '/FILTERED/DataF_CH1@DT5725SB_10806_' + args.measname
 
-    ph_list = list()
-    e_list = list()
-    a_list = list()
-    ae_list = list()
-    #raw_wf_matrix=np.array(object)
+    collector=be.BEGeEvent()
 
     counter = 0
 
@@ -51,22 +46,25 @@ def main():
             raw_wf = np.array(data['trace'])
             curr = flt.curr_filter(raw_wf)
                 
-            ph = data['pulseheight']
-            e = data['energy']
-            a = np.max(curr)
-            ae = a / ph
+            pulse_height = data['pulseheight']
+            energy = data['energy']
+            amplitude = np.max(curr)
+            avse = amplitude / pulse_height
                 
-            ph_list.append(ph)
-            e_list.append(e)
-            a_list.append(a)
-            ae_list.append(ae) 
+            collector.add_pulse_height(pulse_height)
+            collector.add_energy(energy)
+            collector.add_amplitude(amplitude)
+            collector.add_avse(avse)
+            collector.add_trace(raw_wf)
             
             counter += 1
             if counter%10000 == 0: print('{sgn} signals processed...'.format(sgn=counter))
 
         print('*** End of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')
+        
 
-    np.save(args.savedir + args.measname, np.transpose(np.array([ph_list, e_list, a_list, ae_list])))
+    np.save(args.savedir + args.measname, collector.get_parameters())
+    np.save(args.savedir + args.measname + "_trace", collector.get_traces())
 
     print('\n+++++ END OF ANALYSIS +++++\n')
 
