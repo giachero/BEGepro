@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+#./AvsEcompute.py --loc ~/work/data/ -m Std-232Th-3Bq-AEcalibration-im010421 -n 1 -d ~/work/data/
+
 import numpy as np
 import os
 import sys
@@ -5,6 +9,7 @@ import math
 import argparse
 from begepro.rw import CAENhandler
 from begepro.dspro import filters as flt
+import IPython
 
 
 def main():
@@ -25,6 +30,7 @@ def main():
     e_list = list()
     a_list = list()
     ae_list = list()
+    #raw_wf_matrix=np.array(object)
 
     counter = 0
 
@@ -53,7 +59,7 @@ def main():
             ph_list.append(ph)
             e_list.append(e)
             a_list.append(a)
-            ae_list.append(ae)
+            ae_list.append(ae) 
             
             counter += 1
             if counter%10000 == 0: print('{sgn} signals processed...'.format(sgn=counter))
