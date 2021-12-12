@@ -1,5 +1,5 @@
 import numpy as np
-
+                    
 class BEGeEvent(object):
     def __init__(self, trace=None, pheight=None, energy=None, amplitude=None, ae=None, index=None):
 
@@ -12,9 +12,31 @@ class BEGeEvent(object):
         
         return
 
+    def subset(self,index):
+        trace=list()
+        pheight=list()
+        energy=list()
+        amplitude=list()
+        ae=list()
+              
+        index.sort()
+            
+        for i in index:
+            try:
+                n=self.__data["index"].index(i)
+                
+                trace.append(self.__data["trace"][n])
+                pheight.append(self.__data["pheight"][n])
+                energy.append(self.__data["energy"][n])
+                amplitude.append(self.__data["amplitude"][n])
+                ae.append(self.__data["ae"][n])
+            except:
+                print("index "+str(i)+" is not present")    
 
+        return BEGeEvent(trace,pheight,energy,amplitude,ae,index)
+    
     def update(self, key, value):
-        if key in self._data[key]:
+        if key in self.__data.keys():
             self.__data[key]=value
             
         return
