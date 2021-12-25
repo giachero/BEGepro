@@ -8,6 +8,7 @@ import sys
 import math
 import argparse
 from begepro.rw import CAENhandler
+from begepro.rw import CAENhandler_new
 from begepro.dspro import filters as flt
 from begepro.dspro import bege_event as be
 
@@ -25,19 +26,22 @@ def main():
 
     path = args.dirloc + args.measname + '/FILTERED/DataF_CH1@DT5725SB_10806_' + args.measname
 
-    collector=be.BEGeEvent()
-
     counter = 0
 
     print('\n+++++ START OF ANALYSIS +++++\n')
 
-    for i in range(args.nfiles):
-
-        print('*** Start of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')
-
-        if i == 0: rd = CAENhandler.compassReader(path + '.bin',                calibrated=True)
-        else:      rd = CAENhandler.compassReader(path + '_' + str(i) + '.bin', calibrated=True)
+    for i in range(args.nfiles):  
         
+        print('*** Start of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')        
+        
+        filename=path+'.bin' if i==0 else str(i) + '.bin'
+              
+        ev_size,ev_numbers=CAENhandler_new.get_compass_size(filename,calibrated=True)
+        
+        collector=be.BEGeEvent(n_trace=ev_numbers,dim_trace=ev_size)
+        
+        rd = CAENhandler.compassReader(filename,calibrated=True)
+               
         while True:
 
             data = rd.get()
@@ -61,6 +65,7 @@ def main():
             if counter%10000 == 0: print('{sgn} signals processed...'.format(sgn=counter))
 
         print('*** End of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')
+        collector.update_index()
         
 
     np.save(args.savedir + args.measname, collector.get_parameters())
