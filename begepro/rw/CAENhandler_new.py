@@ -205,6 +205,7 @@ class compassReader(binaryReader):
 
         return ev
 
+
 def get_compass_size(filename,calibrated=True):
     if not os.path.isfile(filename):
             raise IOError(errno.ENOENT, os.strerror(errno.ENOENT), filename)

@@ -7,6 +7,8 @@ import os
 import sys
 import math
 import argparse
+
+
 from begepro.rw import CAENhandler
 from begepro.rw import CAENhandler_new
 from begepro.dspro import filters as flt
@@ -14,7 +16,7 @@ from begepro.dspro import bege_event as be
 
 def main():
 
-    usage='python3 reader_test.py -l /path/where/the/measurement/directory/is/ -m measurementName -n numberOfFiles'
+    usage='./AvsEcompute.py -l /path/where/the/measurement/directory/is/ -m measurementName -n numberOfFiles'
     parser = argparse.ArgumentParser(description='Test script to read and analyze BEGe signals from CAEN desktop digitizer', usage=usage)
 
     parser.add_argument("-l", "--loc",    dest="dirloc",   type=str, help="Location of measurement directory", required = True)
@@ -36,7 +38,7 @@ def main():
         
         filename=path+'.bin' if i==0 else str(i) + '.bin'
               
-        ev_size,ev_numbers=CAENhandler_new.get_compass_size(filename,calibrated=True)
+        ev_size, ev_numbers=CAENhandler_new.get_compass_size(filename,calibrated=True)
         
         collector=be.BEGeEvent(n_trace=ev_numbers,dim_trace=ev_size)
         
@@ -47,13 +49,12 @@ def main():
             data = rd.get()
             if data is None: break
 
-            raw_wf = np.array(data['trace'])
-            curr = flt.curr_filter(raw_wf)
-                
+            raw_wf       = np.array(data['trace'])
+            curr         = flt.curr_filter(raw_wf)
             pulse_height = data['pulseheight']
-            energy = data['energy']
-            amplitude = np.max(curr)
-            avse = amplitude / pulse_height
+            energy       = data['energy']
+            amplitude    = np.max(curr)
+            avse         = amplitude / pulse_height
                 
             collector.add_pulse_height(pulse_height)
             collector.add_energy(energy)
