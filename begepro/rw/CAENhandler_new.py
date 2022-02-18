@@ -1,10 +1,13 @@
 import os, errno 
 import struct
 import pylab as plt
+import numpy as np
 
 from sys import getsizeof
 
 from lxml import etree as ET
+
+from begepro.dspro import bege_event as be
 
 class XMLreader(object):
     def __init__(self, filename):
@@ -39,7 +42,22 @@ class XMLreader(object):
         
         return ret
 
-
+class NPYreader(object):
+    def __init__(self, filename,include_trace=False):
+        self.__filename=filename  
+        matrix=np.load(filename)
+        self.__event=be.BEGeEvent(0,0, trace=None, pheight=matrix[:,1], energy=matrix[:,2], amplitude=matrix[:,3], ae=matrix[:,4], index=matrix[:,0])
+        if include_trace:
+            self.set_trace()
+        return
+        
+    def set_trace(self):
+        trace_filename=os.path.splitext(self.__filename)[0]+"_trace"+os.path.splitext(self.__filename)[1]
+        trace=np.load(trace_filename)
+        self.__event.set_trace(trace)
+        
+    def get_event(self):
+        return self.__event
     
 '''
 enum style class
