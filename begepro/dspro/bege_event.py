@@ -77,6 +77,10 @@ class BEGeEvent(object):
         
     def get_indexes(self):
         return self.get_data('index')
+        
+    def set_trace(self,trace):
+        self.__data['trace']=trace
+        return
 
     def get_parameters(self):
         if all(k in self.__data.keys() for k in ['pheight', 'energy', 'amplitude', 'ae', 'index' ]):
