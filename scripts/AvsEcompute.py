@@ -36,7 +36,7 @@ def main():
         
         print('*** Start of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')        
         
-        filename=path+'.bin' if i==0 else str(i) + '.bin'
+        filename=path+'.bin' if i==0 else path+'_'+str(i) + '.bin'
               
         ev_size, ev_numbers=CAENhandler_new.get_compass_size(filename,calibrated=True)
         
@@ -68,9 +68,8 @@ def main():
         print('*** End of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')
         collector.update_index()
         
-
-    np.save(args.savedir + args.measname, collector.get_parameters())
-    np.save(args.savedir + args.measname + "_trace", collector.get_traces())
+        np.save(args.savedir + args.measname+'_'+str(i), collector.get_parameters())
+        np.save(args.savedir + args.measname +'_'+str(i)+"_trace", collector.get_traces())
 
     print('\n+++++ END OF ANALYSIS +++++\n')
 
