@@ -5,9 +5,9 @@ class BEGeEvent(object):
 
         self.__data={'trace'    : np.zeros([n_trace,dim_trace]).astype(np.int16)  if trace     is None else np.array(trace).astype(np.int16), 
                      'pheight'  : np.zeros([n_trace]).astype(np.int16)            if pheight   is None else np.array(pheight).astype(np.int16),
-                     'energy'   : np.zeros([n_trace]).astype(np.float64)          if energy    is None else np.array(energy).astype(np.int16),
+                     'energy'   : np.zeros([n_trace]).astype(np.float64)          if energy    is None else np.array(energy).astype(np.float64),
                      'amplitude': np.zeros([n_trace]).astype(np.int16)            if amplitude is None else np.array(amplitude).astype(np.int16),
-                     'ae'       : np.zeros([n_trace]).astype(np.float64)          if ae        is None else np.array(ae).astype(np.int16),
+                     'ae'       : np.zeros([n_trace]).astype(np.float64)          if ae        is None else np.array(ae).astype(np.float64),
                      'index'    : np.zeros([n_trace]).astype(np.int16)            if index     is None else np.array(index).astype(np.int16)}
                      
         self.__traces=0
@@ -15,14 +15,19 @@ class BEGeEvent(object):
         
         return
 
-    def subset(self,index):    
-        return BEGeEvent(0, 0,
-                         self.get_traces()[index,:],
-                         self.get_pulse_heights()[index],
-                         self.get_energies()[index],
-                         self.get_amplitudes()[index],
-                         self.get_avse()[index],
-                         self.get_indexes()[index])
+    def subset(self,key,cutmin=None,cutmax=None,index=None):
+        if((index==None) & (cutmax==None or cutmin==None)):
+            return
+        if ((key in self.__data.keys())&(key!='trace')): 
+            if index==None:  
+                index=np.where((self.get_data(key) >= cutmin) & (self.get_data(key) <= cutmax))[0]    
+            return BEGeEvent(0, 0,
+                             self.get_traces()[index,:],
+                             self.get_pulse_heights()[index],
+                             self.get_energies()[index],
+                             self.get_amplitudes()[index],
+                             self.get_avse()[index],
+                             self.get_indexes()[index])
     
     def update(self, key, value):
         if key in self.__data.keys():       
@@ -90,8 +95,7 @@ class BEGeEvent(object):
                                           self.__data['amplitude'],
                                           self.__data['ae']]))
         else:
-            return None        
-                                
+            return None               
                         
                                        
                                     
