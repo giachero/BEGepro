@@ -1,4 +1,5 @@
 import numpy as np
+import math as math
                     
 class BEGeEvent(object):
     def __init__(self, n_trace, dim_trace, trace=None, pheight=None, energy=None, amplitude=None, ae=None, index=None):
@@ -16,10 +17,11 @@ class BEGeEvent(object):
         return
 
     def subset(self,key,cutmin=None,cutmax=None,index=None):
-        if((index==None) & (cutmax==None or cutmin==None)):
+        if((index==None) & (cutmin==None)):
             return
         if ((key in self.__data.keys())&(key!='trace')): 
-            if index==None:  
+            if index==None:
+                if cutmax==None: cutmax=float(math.inf)  
                 index=np.where((self.get_data(key) >= cutmin) & (self.get_data(key) <= cutmax))[0]    
             return BEGeEvent(0, 0,
                              self.get_traces()[index,:],
