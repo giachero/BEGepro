@@ -46,10 +46,16 @@ class NPYreader(object):
     def __init__(self, filename,include_trace=False):
         self.__filename=filename  
         matrix=np.load(filename)
-        self.__event=be.BEGeEvent(0,0, trace=None, pheight=matrix[:,1], energy=matrix[:,2], amplitude=matrix[:,3], ae=matrix[:,4], index=matrix[:,0])
+        self.__event=be.BEGeEvent(len(matrix),len(matrix[0]), trace=None,curr=None, pheight=matrix[:,1], energy=matrix[:,2], amplitude=matrix[:,3], ae=matrix[:,4], index=matrix[:,0])
         if include_trace:
             self.set_trace()
+            self.set_curr()
         return
+        
+    def set_curr(self):
+        curr_filename=os.path.splitext(self.__filename)[0]+"_curr"+os.path.splitext(self.__filename)[1] 
+        curr=np.load(curr_filename)
+        self.__event.set_curr(curr)
         
     def set_trace(self):
         trace_filename=os.path.splitext(self.__filename)[0]+"_trace"+os.path.splitext(self.__filename)[1]
