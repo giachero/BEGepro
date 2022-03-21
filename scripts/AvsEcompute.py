@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-#./AvsEcompute.py --loc ~/work/data/ -m Std-232Th-3Bq-AEcalibration-im010421 -n 1 -d ~/work/data/
+#./AvsEcompute.py --loc ~/work/tesi/data/ -m Std-232Th-3Bq-AEcalibration-im010421 -n 1 -d ~/work/tesi/data/
 
 import numpy as np
 import os
 import sys
 import math
 import argparse
+
+#import IPython IPython.embed()
+
 
 
 from begepro.rw import CAENhandler
@@ -40,7 +43,10 @@ def main():
               
         ev_size, ev_numbers=CAENhandler_new.get_compass_size(filename,calibrated=True)
         
+        
         collector=be.BEGeEvent(n_trace=ev_numbers,dim_trace=ev_size)
+        
+        
         
         rd = CAENhandler.compassReader(filename,calibrated=True)
                
@@ -49,8 +55,8 @@ def main():
             data = rd.get()
             if data is None: break
 
-            raw_wf       = np.array(data['trace'])
-            curr         = flt.curr_filter(raw_wf)
+            raw_wf       = np.array(data['trace'])      
+            curr         = flt.curr_filter(raw_wf)               
             pulse_height = data['pulseheight']
             energy       = data['energy']
             amplitude    = np.max(curr)
@@ -60,16 +66,26 @@ def main():
             collector.add_energy(energy)
             collector.add_amplitude(amplitude)
             collector.add_avse(avse)
+            collector.add_curr(curr)
             collector.add_trace(raw_wf)
             
+            
             counter += 1
+            
             if counter%10000 == 0: print('{sgn} signals processed...'.format(sgn=counter))
 
-        print('*** End of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')
-        collector.update_index()
+        print('*** End of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')       
         
-        np.save(args.savedir + args.measname+'_'+str(i), collector.get_parameters())
-        np.save(args.savedir + args.measname +'_'+str(i)+"_trace", collector.get_traces())
+        if i==0:
+            collector_tot=collector
+        else:
+            collector_tot=collector_tot.concatenate(collector,True)
+            
+        collector_tot.update_index()
+        
+    np.save(args.savedir + args.measname, collector_tot.get_parameters())
+    np.save(args.savedir + args.measname+"_trace", collector_tot.get_traces())
+    np.save(args.savedir + args.measname+"_curr", collector_tot.get_curr())
 
     print('\n+++++ END OF ANALYSIS +++++\n')
 
