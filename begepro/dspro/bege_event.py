@@ -2,9 +2,10 @@ import numpy as np
 import math as math
                     
 class BEGeEvent(object):
-    def __init__(self, n_trace, dim_trace, trace=None, pheight=None, energy=None, amplitude=None, ae=None, index=None):
+    def __init__(self, n_trace, dim_trace, trace=None,curr=None, pheight=None, energy=None, amplitude=None, ae=None, index=None):
 
-        self.__data={'trace'    : np.zeros([n_trace,dim_trace]).astype(np.int16)  if trace     is None else np.array(trace).astype(np.int16), 
+        self.__data={'trace'    : np.zeros([n_trace,dim_trace]).astype(np.int16)  if trace     is None else np.array(trace).astype(np.int16),
+                     'curr'     : np.zeros([n_trace,dim_trace]).astype(np.int16)  if curr      is None else np.array(curr).astype(np.int16), 
                      'pheight'  : np.zeros([n_trace]).astype(np.int16)            if pheight   is None else np.array(pheight).astype(np.int16),
                      'energy'   : np.zeros([n_trace]).astype(np.float64)          if energy    is None else np.array(energy).astype(np.float64),
                      'amplitude': np.zeros([n_trace]).astype(np.int16)            if amplitude is None else np.array(amplitude).astype(np.int16),
@@ -12,6 +13,8 @@ class BEGeEvent(object):
                      'index'    : np.zeros([n_trace]).astype(np.int16)            if index     is None else np.array(index).astype(np.int16)}
                      
         self.__traces=0
+        self.n_trace=n_trace
+        self.dim_trace=dim_trace
         
         
         return
@@ -19,12 +22,13 @@ class BEGeEvent(object):
     def subset(self,key,cutmin=None,cutmax=None,index=None):
         if((index==None) & (cutmin==None)):
             return
-        if ((key in self.__data.keys())&(key!='trace')): 
+        if ((key in self.__data.keys())&((key!='trace') & (key!='curr'))): 
             if index==None:
                 if cutmax==None: cutmax=float(math.inf)  
-                index=np.where((self.get_data(key) >= cutmin) & (self.get_data(key) <= cutmax))[0]    
-            return BEGeEvent(0, 0,
+                index=np.where((self.get_data(key) >= cutmin) & (self.get_data(key) <= cutmax))[0]                   
+            return BEGeEvent(index.size,self.dim_trace,
                              self.get_traces()[index,:],
+                             self.get_curr()[index,:],
                              self.get_pulse_heights()[index],
                              self.get_energies()[index],
                              self.get_amplitudes()[index],
@@ -51,6 +55,9 @@ class BEGeEvent(object):
 
     def add_trace(self, trace):
         return self.__add_element('trace', np.array(trace).astype(np.int16))
+        
+    def add_curr(self, curr):
+        return self.__add_element('curr', np.array(curr).astype(np.int16))
 
     def add_pulse_height(self, pheight):
         return self.__add_element('pheight', np.int16(pheight))
@@ -69,6 +76,9 @@ class BEGeEvent(object):
 
     def get_traces(self):
         return self.get_data('trace')
+        
+    def get_curr(self):
+        return self.get_data('curr')
 
     def get_pulse_heights(self):
         return self.get_data('pheight')
@@ -88,6 +98,10 @@ class BEGeEvent(object):
     def set_trace(self,trace):
         self.__data['trace']=trace
         return
+        
+    def set_curr(self,curr):
+        self.__data['curr']=curr
+        return
 
     def get_parameters(self):
         if all(k in self.__data.keys() for k in ['pheight', 'energy', 'amplitude', 'ae', 'index' ]):
@@ -97,9 +111,35 @@ class BEGeEvent(object):
                                           self.__data['amplitude'],
                                           self.__data['ae']]))
         else:
-            return None               
-                        
-                                       
-                                    
+            return None
+            
+    def concatenate(self,be,redefine=False):  
+        return BEGeEvent(self.n_trace+be.n_trace,self.dim_trace,
+                            np.concatenate((self.get_traces(),be.get_traces())),
+                            np.concatenate((self.get_curr(),be.get_curr())),
+                            np.hstack((self.get_pulse_heights(),be.get_pulse_heights())),
+                            np.hstack((self.get_energies(),be.get_energies())),
+                            np.hstack((self.get_amplitudes(),be.get_amplitudes())),
+                            np.hstack((self.get_avse(),be.get_avse())),
+                            np.hstack((self.get_indexes(),be.get_indexes())))
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+                    
         
-    
