@@ -10,7 +10,7 @@ class BEGeEvent(object):
                      'energy'   : np.zeros([n_trace]).astype(np.float64)          if energy    is None else np.array(energy).astype(np.float64),
                      'amplitude': np.zeros([n_trace]).astype(np.int16)            if amplitude is None else np.array(amplitude).astype(np.int16),
                      'ae'       : np.zeros([n_trace]).astype(np.float64)          if ae        is None else np.array(ae).astype(np.float64),
-                     'index'    : np.zeros([n_trace]).astype(np.int16)            if index     is None else np.array(index).astype(np.int16)}
+                     'index'    : np.zeros([n_trace]).astype(np.int16)            if index     is None else np.array(index).astype(np.int32)}
                      
         self.__traces=0
         self.n_trace=n_trace
