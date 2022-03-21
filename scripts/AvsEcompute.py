@@ -79,7 +79,7 @@ def main():
         if i==0:
             collector_tot=collector
         else:
-            collector_tot=collector_tot.concatenate(collector,True)
+            collector_tot+=collector
             
         collector_tot.update_index()
         
