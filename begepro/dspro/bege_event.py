@@ -113,7 +113,7 @@ class BEGeEvent(object):
         else:
             return None
             
-    def concatenate(self,be,redefine=False):  
+    def __add__(self,be):  
         return BEGeEvent(self.n_trace+be.n_trace,self.dim_trace,
                             np.concatenate((self.get_traces(),be.get_traces())),
                             np.concatenate((self.get_curr(),be.get_curr())),
