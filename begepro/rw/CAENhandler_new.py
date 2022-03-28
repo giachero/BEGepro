@@ -46,7 +46,7 @@ class NPYreader(object):
     def __init__(self, filename,include_trace=False):
         self.__filename=filename  
         matrix=np.load(filename)
-        self.__event=be.BEGeEvent(len(matrix),len(matrix[0]), trace=None,curr=None, pheight=matrix[:,1], energy=matrix[:,2], amplitude=matrix[:,3], ae=matrix[:,4], index=matrix[:,0])
+        self.__event=be.BEGeEvent(len(matrix),len(matrix[0]), trace=None,curr=None, pheight=matrix[:,1], energy=matrix[:,2], amplitude=matrix[:,3], ae=matrix[:,4], risetime=matrix[:,5],           n_peaks=matrix[:,6],index=matrix[:,0])
         if include_trace:
             self.set_trace()
             self.set_curr()
