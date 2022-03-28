@@ -2,15 +2,17 @@ import numpy as np
 import math as math
                     
 class BEGeEvent(object):
-    def __init__(self, n_trace, dim_trace, trace=None,curr=None, pheight=None, energy=None, amplitude=None, ae=None, index=None):
+    def __init__(self, n_trace, dim_trace, trace=None,curr=None, pheight=None, energy=None, amplitude=None, ae=None, risetime=None,n_peaks=None, index=None):
 
-        self.__data={'trace'    : np.zeros([n_trace,dim_trace]).astype(np.int16)  if trace     is None else np.array(trace).astype(np.int16),
-                     'curr'     : np.zeros([n_trace,dim_trace]).astype(np.int16)  if curr      is None else np.array(curr).astype(np.int16), 
-                     'pheight'  : np.zeros([n_trace]).astype(np.int16)            if pheight   is None else np.array(pheight).astype(np.int16),
-                     'energy'   : np.zeros([n_trace]).astype(np.float64)          if energy    is None else np.array(energy).astype(np.float64),
-                     'amplitude': np.zeros([n_trace]).astype(np.int16)            if amplitude is None else np.array(amplitude).astype(np.int16),
-                     'ae'       : np.zeros([n_trace]).astype(np.float64)          if ae        is None else np.array(ae).astype(np.float64),
-                     'index'    : np.zeros([n_trace]).astype(np.int16)            if index     is None else np.array(index).astype(np.int32)}
+        self.__data={'trace'    : np.zeros([n_trace,dim_trace]).astype(np.int16)   if trace     is None else np.array(trace).astype(np.int16),
+                     'curr'     : np.zeros([n_trace,dim_trace]).astype(np.float64) if curr      is None else np.array(curr).astype(np.float64), 
+                     'pheight'  : np.zeros([n_trace]).astype(np.int16)             if pheight   is None else np.array(pheight).astype(np.int16),
+                     'energy'   : np.zeros([n_trace]).astype(np.float64)           if energy    is None else np.array(energy).astype(np.float64),
+                     'amplitude': np.zeros([n_trace]).astype(np.int16)             if amplitude is None else np.array(amplitude).astype(np.int16),
+                     'ae'       : np.zeros([n_trace]).astype(np.float64)           if ae        is None else np.array(ae).astype(np.float64),
+                     'risetime' : np.zeros([n_trace]).astype(np.float64)           if risetime  is None else np.array(risetime).astype(np.float64),
+                     'n_peaks'  : np.zeros([n_trace]).astype(np.int16)             if n_peaks   is None else np.array(n_peaks).astype(np.int16),
+                     'index'    : np.zeros([n_trace]).astype(np.int16)             if index     is None else np.array(index).astype(np.int32)}
                      
         self.__traces=0
         self.n_trace=n_trace
@@ -20,10 +22,10 @@ class BEGeEvent(object):
         return
 
     def subset(self,key,cutmin=None,cutmax=None,index=None):
-        if((index==None) & (cutmin==None)):
+        if((index is None) & (cutmin==None)):
             return
         if ((key in self.__data.keys())&((key!='trace') & (key!='curr'))): 
-            if index==None:
+            if index is None:
                 if cutmax==None: cutmax=float(math.inf)  
                 index=np.where((self.get_data(key) >= cutmin) & (self.get_data(key) <= cutmax))[0]                   
             return BEGeEvent(index.size,self.dim_trace,
@@ -33,6 +35,8 @@ class BEGeEvent(object):
                              self.get_energies()[index],
                              self.get_amplitudes()[index],
                              self.get_avse()[index],
+                             self.get_risetime()[index],
+                             self.get_n_peaks()[index],
                              self.get_indexes()[index])
     
     def update(self, key, value):
@@ -57,7 +61,7 @@ class BEGeEvent(object):
         return self.__add_element('trace', np.array(trace).astype(np.int16))
         
     def add_curr(self, curr):
-        return self.__add_element('curr', np.array(curr).astype(np.int16))
+        return self.__add_element('curr', np.array(curr).astype(np.float64))
 
     def add_pulse_height(self, pheight):
         return self.__add_element('pheight', np.int16(pheight))
@@ -70,9 +74,18 @@ class BEGeEvent(object):
 
     def add_avse(self, ae):
         return self.__add_element('ae', np.float64(ae))
+        
+    def add_risetime(self, risetime):
+        return self.__add_element('risetime', np.float64(risetime))
+        
+    def add_n_peaks(self, n_peaks):
+        return self.__add_element('n_peaks', np.array(n_peaks).astype(np.int16))
 
     def get_data(self, key):
         return self.__data[key] if key in self.__data else None
+        
+    def get_dict(self):
+        return self.__data
 
     def get_traces(self):
         return self.get_data('trace')
@@ -92,6 +105,12 @@ class BEGeEvent(object):
     def get_avse(self):
         return self.get_data('ae')
         
+    def get_risetime(self):
+        return self.get_data('risetime')
+        
+    def get_n_peaks(self):
+        return self.get_data('n_peaks')
+        
     def get_indexes(self):
         return self.get_data('index')
         
@@ -104,12 +123,14 @@ class BEGeEvent(object):
         return
 
     def get_parameters(self):
-        if all(k in self.__data.keys() for k in ['pheight', 'energy', 'amplitude', 'ae', 'index' ]):
+        if all(k in self.__data.keys() for k in ['pheight', 'energy', 'amplitude', 'ae', 'risetime','n_peaks', 'index' ]):
             return np.transpose(np.array([self.__data['index'],
                                           self.__data['pheight'],
                                           self.__data['energy'],
                                           self.__data['amplitude'],
-                                          self.__data['ae']]))
+                                          self.__data['ae'],
+                                          self.__data['risetime'],
+                                          self.__data['n_peaks']]))
         else:
             return None
             
@@ -121,6 +142,8 @@ class BEGeEvent(object):
                             np.hstack((self.get_energies(),be.get_energies())),
                             np.hstack((self.get_amplitudes(),be.get_amplitudes())),
                             np.hstack((self.get_avse(),be.get_avse())),
+                            np.hstack((self.get_risetime(),be.get_risetime())),
+                            np.hstack((self.get_n_peaks(),be.get_n_peaks())),
                             np.hstack((self.get_indexes(),be.get_indexes())))
    
    
