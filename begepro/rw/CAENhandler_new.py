@@ -45,8 +45,18 @@ class XMLreader(object):
 class NPYreader(object):
     def __init__(self, filename,include_trace=False):
         self.__filename=filename  
-        matrix=np.load(filename)
-        self.__event=be.BEGeEvent(len(matrix),len(matrix[0]), trace=None,curr=None, pheight=matrix[:,1], energy=matrix[:,2], amplitude=matrix[:,3], ae=matrix[:,4], risetime=matrix[:,5],           n_peaks=matrix[:,6],index=matrix[:,0])
+        matrix=np.load(filename,allow_pickle=True)
+        self.__event=be.BEGeEvent(len(matrix),
+                                  len(matrix[0]), 
+                                  trace=np.array([]),
+                                  curr=np.array([]), 
+                                  pheight=matrix[:,1], 
+                                  energy=matrix[:,2], 
+                                  amplitude=matrix[:,3], 
+                                  ae=matrix[:,4], 
+                                  risetime=matrix[:,5],           
+                                  n_peaks=matrix[:,6],
+                                  index=matrix[:,0])
         if include_trace:
             self.set_trace()
             self.set_curr()
@@ -54,12 +64,12 @@ class NPYreader(object):
         
     def set_curr(self):
         curr_filename=os.path.splitext(self.__filename)[0]+"_curr"+os.path.splitext(self.__filename)[1] 
-        curr=np.load(curr_filename)
+        curr=np.load(curr_filename,allow_pickle=True)
         self.__event.set_curr(curr)
         
     def set_trace(self):
         trace_filename=os.path.splitext(self.__filename)[0]+"_trace"+os.path.splitext(self.__filename)[1]
-        trace=np.load(trace_filename)
+        trace=np.load(trace_filename,allow_pickle=True)
         self.__event.set_trace(trace)
         
     def get_event(self):
