@@ -28,9 +28,9 @@ class BEGeEvent(object):
             if index is None:
                 if cutmax==None: cutmax=float(math.inf)  
                 index=np.where((self.get_data(key) >= cutmin) & (self.get_data(key) <= cutmax))[0]                   
-            return BEGeEvent(index.size,self.dim_trace,
-                             self.get_traces()[index,:],
-                             self.get_curr()[index,:],
+            return BEGeEvent(np.array(index).size,self.dim_trace,
+                             self.get_traces()[index,:] if self.get_traces().size != 0 else None,
+                             self.get_curr()[index,:] if self.get_curr().size != 0 else None,
                              self.get_pulse_heights()[index],
                              self.get_energies()[index],
                              self.get_amplitudes()[index],
@@ -46,13 +46,13 @@ class BEGeEvent(object):
         return
         
     def update_index(self):
-        self.__data['index']=np.array(range(len(self.__data['trace'])))   
+        self.__data['index']=np.array(range(len(self.__data['n_peaks'])))   
         return
 
     def __add_element(self, key, value):
         if key in self.__data.keys():
             self.__data[key][self.__traces]=value
-            if key=='trace':      
+            if key=='n_peaks':      
                 self.__traces+=1
             
         return
@@ -124,7 +124,7 @@ class BEGeEvent(object):
 
     def get_parameters(self):
         if all(k in self.__data.keys() for k in ['pheight', 'energy', 'amplitude', 'ae', 'risetime','n_peaks', 'index' ]):
-            return np.transpose(np.array([self.__data['index'],
+            return np.transpose(np.matrix([self.__data['index'],
                                           self.__data['pheight'],
                                           self.__data['energy'],
                                           self.__data['amplitude'],
@@ -135,16 +135,18 @@ class BEGeEvent(object):
             return None
             
     def __add__(self,be):  
-        return BEGeEvent(self.n_trace+be.n_trace,self.dim_trace,
-                            np.concatenate((self.get_traces(),be.get_traces())),
-                            np.concatenate((self.get_curr(),be.get_curr())),
-                            np.hstack((self.get_pulse_heights(),be.get_pulse_heights())),
-                            np.hstack((self.get_energies(),be.get_energies())),
-                            np.hstack((self.get_amplitudes(),be.get_amplitudes())),
-                            np.hstack((self.get_avse(),be.get_avse())),
-                            np.hstack((self.get_risetime(),be.get_risetime())),
-                            np.hstack((self.get_n_peaks(),be.get_n_peaks())),
-                            np.hstack((self.get_indexes(),be.get_indexes())))
+        return BEGeEvent(self.n_trace+be.n_trace,
+                         self.dim_trace,
+                         np.array(np.concatenate((self.get_traces(),be.get_traces()))),
+                         np.array(np.concatenate((self.get_curr(),be.get_curr()))),
+                         np.hstack((self.get_pulse_heights(),be.get_pulse_heights())),
+                         np.hstack((self.get_energies(),be.get_energies())),
+                         np.hstack((self.get_amplitudes(),be.get_amplitudes())),
+                         np.hstack((self.get_avse(),be.get_avse())),
+                         np.hstack((self.get_risetime(),be.get_risetime())),
+                         np.hstack((self.get_n_peaks(),be.get_n_peaks())),
+                         np.hstack((self.get_indexes(),be.get_indexes()))
+                         )
    
    
    
