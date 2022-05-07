@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#./AvsEcompute.py --loc ~/work/tesi/data/ -m Std-232Th-3Bq-AEcalibration-im010421 -n 1 -d ~/work/tesi/data/ -r True
+#./AvsEcompute.py --loc ~/work/tesi/data/ -m Std-232Th-3Bq-AEcalibration-im010421 -n 1 -d ~/work/tesi/data/ -r 1
 
 import numpy as np
 import os
@@ -39,6 +39,9 @@ def main():
     rt_obj=ut.rise_time()
     peaks_obj=ut.n_peaks()
     plateau_obj=ut.plateau()
+    
+    E=750 #energy in keV
+    maxlim=7 #massimo nel segnale di corrente per il quale il segnale è ben definito
 
     print('\n+++++ START OF ANALYSIS +++++\n')
 
@@ -68,8 +71,9 @@ def main():
             energy       = data['energy']
             amplitude    = np.max(curr)
             avse         = amplitude / pulse_height
-            risetime,t   = rt_obj.compute_rt(raw_wf,4e-9)
-            n_peaks      = len(peaks_obj.compute_n_peaks2(curr))
+            risetime,t   = rt_obj.compute_rt(raw_wf,4e-9)            
+                
+            n_peaks      = len(peaks_obj.compute_n_peaks(curr,energy,E,maxlim))
                 
             collector.add_pulse_height(pulse_height)
             collector.add_energy(energy)
