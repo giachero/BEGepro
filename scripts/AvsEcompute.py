@@ -16,7 +16,7 @@ from begepro.rw import CAENhandler
 from begepro.rw import CAENhandler_new
 from begepro.dspro import filters as flt
 from begepro.dspro import bege_event as be
-from begepro.dspro import utils as ut
+from begepro.dspro import utils as u
 
 def main():
 
@@ -36,9 +36,10 @@ def main():
     path = args.dirloc + args.measname + '/FILTERED/DataF_CH1@DT5725SB_10806_' + args.measname
 
     counter = 0
-    rt_obj=ut.rise_time()
-    peaks_obj=ut.n_peaks()
-    plateau_obj=ut.plateau()
+    rt_obj=u.rise_time()
+    peaks_obj=u.n_peaks()
+    plateau_obj=u.plateau()
+    nd_der_obj=u.second_derivative()
     
     E=750 #energy in keV
     maxlim=7 #massimo nel segnale di corrente per il quale il segnale è ben definito
@@ -65,13 +66,14 @@ def main():
             data = rd.get()
             if data is None: break
 
-            raw_wf       = np.array(data['trace'])      
-            curr         = flt.curr_filter(raw_wf)               
-            pulse_height = data['pulseheight']
-            energy       = data['energy']
-            amplitude    = np.max(curr)
-            avse         = amplitude / pulse_height
-            risetime,t   = rt_obj.compute_rt(raw_wf,4e-9)            
+            raw_wf            = np.array(data['trace'])      
+            curr              = flt.curr_filter(raw_wf)               
+            pulse_height      = data['pulseheight']
+            energy            = data['energy']
+            amplitude         = np.max(curr)
+            avse              = amplitude / pulse_height
+            risetime,t        = rt_obj.compute_rt(raw_wf,4e-9)
+            zeros_2der        = nd_der_obj.compute_n_zeros(raw_wf,t)               
                 
             n_peaks      = len(peaks_obj.compute_n_peaks(curr,energy,E,maxlim))
                 
@@ -80,6 +82,7 @@ def main():
             collector.add_amplitude(amplitude)
             collector.add_avse(avse)
             collector.add_risetime(risetime)
+            collector.add_zeros_2der(len(zeros_2der))
             
             if(args.readTrace):
                 collector.add_curr(curr)
