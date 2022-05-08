@@ -46,11 +46,14 @@ class second_derivative(object):
     def __init__(self):
         return
         
-    def compute_n_zeros(self,t):
-        l=rtobj.i_max-rtobj.i_min
+    def compute_n_zeros(self,trace,t):
+        f=savgol_filter(trace,20,0)
+        f=savgol_filter(f,10,2,deriv=2)
+        
+        l=t[1]-t[0]
         x=np.full(l,1)
         y=np.zeros(l)
-        a=np.where(f[rtobj.i_min : rtobj.i_max]>=0,x,y)
+        a=np.where(f[t[0] : t[1]]>=0,x,y)
         a=str(a)
         a=a.translate({ord(i): None for i in '[]. \n'})
         n=a.count('01')+a.count('10')
@@ -61,7 +64,7 @@ class second_derivative(object):
         for match in re.finditer('10',a):
             indexes.append(match.start())
             
-        indexes=indexes+rtobj.i_min
+        indexes=indexes+t[0]
 
         cond=True
         while(cond & len(indexes)>1):
@@ -74,9 +77,7 @@ class second_derivative(object):
                     cond=True
                     break;
                     
-        print(len(indexes))
-    
-plt.scatter(indexes,f[indexes],marker='o',color='r')
+        return indexes
 
         
         
