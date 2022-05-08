@@ -56,6 +56,7 @@ class NPYreader(object):
                                   ae=matrix[:,4], 
                                   risetime=matrix[:,5],           
                                   n_peaks=matrix[:,6],
+                                  zeros_2der=matrix[:,7],
                                   index=matrix[:,0])
         if include_trace:
             self.set_trace()
