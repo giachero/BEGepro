@@ -47,8 +47,11 @@ class second_derivative(object):
         return
         
     def compute_n_zeros(self,trace,t):
+        #f=savgol_filter(trace,20,0)
+        #f=savgol_filter(f,10,2,deriv=2) #maggiore ordine
         f=savgol_filter(trace,20,0)
-        f=savgol_filter(f,10,2,deriv=2)
+        f=savgol_filter(f,10,1,deriv=1)
+        f=savgol_filter(f,20,0)
         
         l=t[1]-t[0]
         x=np.full(l,1)
@@ -78,6 +81,49 @@ class second_derivative(object):
                     break;
                     
         return indexes
+        
+        
+    def compute_n_zeros2(self,curr,t,c=None,f=None):
+
+        if((c is None) | (f is None)):
+            c,f=self.compute_der(curr)
+        
+        l=t[1]-t[0]
+        x=np.full(l,1)
+        y=np.zeros(l)
+        a=np.where(f[t[0] : t[1]]>=0,x,y)
+        a=str(a)
+        a=a.translate({ord(i): None for i in '[]. \n'})
+        n=a.count('01')+a.count('10')
+
+        indexes=[]
+        for match in re.finditer('01',a):
+            indexes.append(match.start())
+        for match in re.finditer('10',a):
+            indexes.append(match.start())
+            
+        indexes=indexes+t[0]
+        
+        cond=True
+        while(cond):
+            diff=abs(indexes[0:indexes.size-1]-indexes[1:])
+            cut=np.where(diff<15)[0]
+            if(cut.size>0):
+                indexes=np.delete(indexes,cut[0])
+                cond=True
+            else:
+                cond=False
+                    
+        return indexes
+        
+    def compute_der(self,curr):
+        c=savgol_filter(curr,14,0)
+        f=savgol_filter(c,2,1,deriv=1)
+        return c,f
+        
+    def compute_n_peaks(self,second_der,t):   
+        indexes=find_peaks(second_der[t[0] : t[1]],prominence=0.1,distance=10)[0]+t[0]
+        return indexes.astype(np.int16)
 
         
         
