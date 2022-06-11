@@ -19,6 +19,33 @@ class rise_time(object):
         T=np.arange(0,len(trace))*frequency
         return T[self.i_max]-T[self.i_min],tuple([self.i_min,self.i_max])
         
+        
+    def compute_rt2(self,trace,frequency,riseTimeLimits=(0.1,0.9)):
+        #trace=savgol_filter(trace,20,0)
+        M=max(trace)
+        m=min(trace)
+        i_m=np.where(trace==m)[0][0]
+        ylim=M-m
+        i_min2=np.where(trace[i_m:]-m-riseTimeLimits[0]*ylim >=0)[0][0]+i_m
+        self.prova=i_min2
+        i_min1=i_min2-1
+        i_max2=np.where(trace-m-riseTimeLimits[1]*ylim >=0)[0][0]
+        i_max1=i_max2-1
+        
+        self.t_min=np.interp(m+riseTimeLimits[0]*ylim,[trace[i_min1],trace[i_min2]],[i_min1,i_min2])
+        self.t_max=np.interp(m+riseTimeLimits[1]*ylim,[trace[i_max1],trace[i_max2]],[i_max1,i_max2])
+
+        res=(self.t_max-self.t_min)*frequency,tuple([int(np.ceil(self.t_min)),int(np.ceil(self.t_max))])
+        """if(self.t_max)<0:
+            import pylab as plt
+            plt.figure()
+            plt.plot(trace)
+            plt.scatter(i_min2,trace[i_min2])
+            print(np.where(trace-m-riseTimeLimits[0]*ylim >=0))
+            plt.show()"""
+            
+        return res
+        
 class n_peaks(object):
     def __init__(self):
         return
@@ -91,18 +118,19 @@ class second_derivative(object):
         l=t[1]-t[0]
         x=np.full(l,1)
         y=np.zeros(l)
+      
         a=np.where(f[t[0] : t[1]]>=0,x,y)
         a=str(a)
         a=a.translate({ord(i): None for i in '[]. \n'})
         n=a.count('01')+a.count('10')
 
-        indexes=[]
+        indexes=[] 
         for match in re.finditer('01',a):
             indexes.append(match.start())
         for match in re.finditer('10',a):
             indexes.append(match.start())
             
-        indexes=indexes+t[0]
+        indexes=np.array(indexes)+t[0]
         
         cond=True
         while(cond):
@@ -122,10 +150,55 @@ class second_derivative(object):
         return c,f
         
     def compute_n_peaks(self,second_der,t):   
-        indexes=find_peaks(second_der[t[0] : t[1]],prominence=0.1,distance=10)[0]+t[0]
+        indexes=find_peaks(second_der[t[0] : t[1]],distance=10)[0]+t[0]
         return indexes.astype(np.int16)
 
+class simm(object):
+    def __init__(self):
+        return
+    
+    def compute_simm(self,trace):
+    
+        trace=savgol_filter(trace,30,0)
+        trace=trace-min(trace)
+        h=int(trace.size/2)
+        t1=trace[0:h]
+        t1=t1[::-1]
+        t1=t1*(-1)
+        t1=t1-min(t1)
+        t2=trace[h:]
+        t2=t2-np.min(t2)
+
+        d=np.sum(abs((t1) - (t2)))
+        return d
         
+    def compute_simm2(self,curr):    
+        curr=savgol_filter(curr,30,0)
+
+        ind=np.where(curr==max(curr))[0][0]
+        s=int((min(curr.size-ind,ind-1)/10))
+
+        t1=curr[ind-s:ind]
+        t1=t1-min(t1)
+        #t1=t1/max(t1)
+        t2=curr[ind:ind+s]
+        t2=t2-min(t2)
+        t2=t2[::-1]
+        #t2=t2/max(t2)
+
+        d=np.sum(abs(t1-t2))
+        return d
+        
+    def compute_simm3(self,trace):
+    
+        conf=np.load('/home/marco/work/tesi/data/TestSimm/trace.npy')
+    
+        trace=savgol_filter(trace,30,0)
+        trace=trace-min(trace)
+        trace=trace/max(trace)
+
+        d=np.sum(abs(trace-conf))
+        return d
         
 class plateau(object):
     def compute_plateau(self,coll1,l):
