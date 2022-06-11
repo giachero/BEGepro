@@ -2,6 +2,8 @@
 
 #./AvsEcompute.py --loc ~/work/tesi/data/ -m Std-232Th-3Bq-AEcalibration-im010421 -n 1 -d ~/work/tesi/data/ -r 1
 
+#./AvsEcompute.py --loc ~/work/tesi/data/ -m 228Th-grafico-tesi-im260421_1 -n 265 -d ~/work/tesi/data/ -r 0
+
 import numpy as np
 import os
 import sys
@@ -36,6 +38,7 @@ def main():
     path = args.dirloc + args.measname + '/FILTERED/DataF_CH1@DT5725SB_10806_' + args.measname
 
     counter = 0
+    exc_counter=0
     rt_obj=u.rise_time()
     peaks_obj=u.n_peaks()
     plateau_obj=u.plateau()
@@ -45,8 +48,10 @@ def main():
     maxlim=7 #massimo nel segnale di corrente per il quale il segnale è ben definito
 
     print('\n+++++ START OF ANALYSIS +++++\n')
+    
+    cond=True
 
-    for i in range(args.nfiles):  
+    for i in range(0,args.nfiles):  
         
         print('*** Start of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')        
         
@@ -66,31 +71,57 @@ def main():
             data = rd.get()
             if data is None: break
 
-            raw_wf            = np.array(data['trace'])      
-            curr              = flt.curr_filter(raw_wf)               
-            pulse_height      = data['pulseheight']
-            energy            = data['energy']
-            amplitude         = np.max(curr)
-            avse              = amplitude / pulse_height
-            risetime,t        = rt_obj.compute_rt(raw_wf,4e-9)
-            zeros_2der        = nd_der_obj.compute_n_zeros(raw_wf,t)               
+            try:
+                raw_wf            = np.array(data['trace'])      
+                curr              = flt.curr_filter(raw_wf)               
+                pulse_height      = data['pulseheight']
+                energy            = data['energy']
+                amplitude         = np.max(curr)
+                avse              = amplitude / pulse_height
+                risetime,t        = rt_obj.compute_rt2(raw_wf,4e-9)
                 
-            n_peaks      = len(peaks_obj.compute_n_peaks(curr,energy,E,maxlim))
+                c,f               = nd_der_obj.compute_der(curr)
                 
-            collector.add_pulse_height(pulse_height)
-            collector.add_energy(energy)
-            collector.add_amplitude(amplitude)
-            collector.add_avse(avse)
-            collector.add_risetime(risetime)
-            collector.add_zeros_2der(len(zeros_2der))
+                #print(counter)
+                """
+                if counter==57:
+                    import pylab as plt
+                    plt.figure()
+                    plt.plot(raw_wf)
+                    print(t[0])
+                    plt.scatter(rt_obj.prova,raw_wf[rt_obj.prova])
+                    plt.show()
+                """
+                
+                zeros_2der        = len(nd_der_obj.compute_n_zeros2(curr,t,c,f))                                                
+                n_peaks           = len(peaks_obj.compute_n_peaks(curr,energy,E,maxlim))
+                n_peaks_2der      = len(nd_der_obj.compute_n_peaks(f,t))
+                
+                    
+                collector.add_pulse_height(pulse_height)
+                collector.add_energy(energy)
+                collector.add_amplitude(amplitude)
+                collector.add_avse(avse)
+                collector.add_risetime(risetime)
+                collector.add_zeros_2der(zeros_2der)
+                collector.add_n_peaks_2der(n_peaks_2der)
+                
+                if(args.readTrace):
+                    collector.add_curr(curr)
+                    collector.add_trace(raw_wf)
+                    
+                collector.add_n_peaks(n_peaks)
+                
+            except:
+                exc_counter+=1
+               """ import pylab as plt
+                plt.figure()
+                plt.plot(raw_wf)
+                print(t)
+                plt.scatter(rt_obj.prova,raw_wf[rt_obj.prova])            
+                plt.savefig('/home/marco/work/tesi/images/exceptions/img_'+str(counter)+'.png')"""
             
-            if(args.readTrace):
-                collector.add_curr(curr)
-                collector.add_trace(raw_wf)
-                
-            collector.add_n_peaks(n_peaks)
-            
-            #if counter==8: IPython.embed()
+            #if counter==22: break #IPython.embed()
             
             
             counter += 1
@@ -99,17 +130,24 @@ def main():
 
         print('*** End of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')
                       
-        if i==0:
+        if (cond):
             collector_tot=collector
+            cond=False
         else:
             collector_tot+=collector
             
         collector_tot.update_index()
         
-    np.save(args.savedir + args.measname, collector_tot.get_parameters())
-    np.save(args.savedir + args.measname+"_trace", collector_tot.get_traces())
-    np.save(args.savedir + args.measname+"_curr", collector_tot.get_curr())
-
+        if(((i%5==0) & (i!=0)) | (i==args.nfiles-1)):
+            np.save(args.savedir + args.measname+'__'+str(i), collector_tot.get_parameters())
+            
+            if(args.readTrace):
+                np.save(args.savedir + args.measname+"_trace"+'__'+str(i), collector_tot.get_traces())
+                np.save(args.savedir + args.measname+"_curr"+'__'+str(i), collector_tot.get_curr())
+            
+            cond=True
+            
+    print('exc encountered: '+str(exc_counter))
     print('\n+++++ END OF ANALYSIS +++++\n')
 
     return
