@@ -43,6 +43,7 @@ def main():
     peaks_obj=u.n_peaks()
     plateau_obj=u.plateau()
     nd_der_obj=u.second_derivative()
+    simm_obj=u.simm()
     
     E=750 #energy in keV
     maxlim=7 #massimo nel segnale di corrente per il quale il segnale è ben definito
@@ -70,8 +71,9 @@ def main():
 
             data = rd.get()
             if data is None: break
-
+           
             try:
+                
                 raw_wf            = np.array(data['trace'])      
                 curr              = flt.curr_filter(raw_wf)               
                 pulse_height      = data['pulseheight']
@@ -81,6 +83,7 @@ def main():
                 risetime,t        = rt_obj.compute_rt2(raw_wf,4e-9)
                 
                 c,f               = nd_der_obj.compute_der(curr)
+                             
                 
                 #print(counter)
                 """
@@ -97,7 +100,9 @@ def main():
                 n_peaks           = len(peaks_obj.compute_n_peaks(curr,energy,E,maxlim))
                 n_peaks_2der      = len(nd_der_obj.compute_n_peaks(f,t))
                 
-                    
+                
+                simm              = simm_obj.compute_simm3(raw_wf)  
+                                                             
                 collector.add_pulse_height(pulse_height)
                 collector.add_energy(energy)
                 collector.add_amplitude(amplitude)
@@ -105,6 +110,7 @@ def main():
                 collector.add_risetime(risetime)
                 collector.add_zeros_2der(zeros_2der)
                 collector.add_n_peaks_2der(n_peaks_2der)
+                collector.add_simm(simm)
                 
                 if(args.readTrace):
                     collector.add_curr(curr)
@@ -112,9 +118,13 @@ def main():
                     
                 collector.add_n_peaks(n_peaks)
                 
+                
             except:
                 exc_counter+=1
-               """ import pylab as plt
+                #print('exc: '+str(exc_counter)+' counter: '+str(counter))
+                
+                """
+                import pylab as plt
                 plt.figure()
                 plt.plot(raw_wf)
                 print(t)
@@ -135,7 +145,8 @@ def main():
             cond=False
         else:
             collector_tot+=collector
-            
+        
+        collector_tot.remove_zeros()    
         collector_tot.update_index()
         
         if(((i%5==0) & (i!=0)) | (i==args.nfiles-1)):
