@@ -94,6 +94,7 @@ class EnergyCalibration(object):
             xlim = np.min(self.__x), np.max(self.__x)
         xfnc = np.linspace(xlim[0], xlim[1], num=nop)
         plt.errorbar(self.__x, self.__y, xerr = self.__ex, yerr = self.__ey, fmt='.')
+        print(self.__pars)
         plt.plot(xfnc, self.__fnc(self.__pars, xfnc))
         plt.xlabel('Channel Number')
         plt.ylabel('Energy [keV]')
