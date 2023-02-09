@@ -61,10 +61,10 @@ def exclude_unwanted_peaks(xdata, peaks, properties, mu):
                     fit_mask[unwanted_peak_location_idx+j] = 0
     return fit_mask.astype(bool)
 
-def compute_sn(data, selection, mu_true, energy_mask, range, nbins):
+def compute_sn(data, selection, mu_true, energy_mask, width, nbins):
     masked_energies = data[energy_mask]
     energies = masked_energies[selection]
-    hist = np.histogram(energies, bins = nbins, range = [mu_true -range, mu_true +range])
+    hist = np.histogram(energies, bins = nbins, range = [mu_true -width, mu_true +width])
     ydata = hist[0]
     xdata = (hist[1][:-1] +  hist[1][1:])/2 
     sigma = np.sqrt(ydata)/ydata.sum()
@@ -106,7 +106,7 @@ def compute_sn(data, selection, mu_true, energy_mask, range, nbins):
     sb = sig/bkg
     std_sb = np.sqrt((std_s/bkg)**2 + (sig*std_b/bkg**2)**2)
 
-    if std_sb > 10*sb:
+    if std_sb > sb:
         warnings.warn("The fit did not converge.")
         return None, None
     else:
@@ -118,9 +118,9 @@ class Comparison():
         self.avse = avse
         self.scores = scores
     
-    def compare(self, peaklist, scan, benchmark):
-        range = 30
-        nbins = 90
+    def compare(self, peaklist, scan, benchmark, width = 30, nbins = 90):
+        # width = 30
+        # nbins = 90
         sb_nn = np.zeros((len(scan), len(peaklist)))
         std_sb_nn = np.zeros((len(scan), len(peaklist)))
         sb_avse = np.zeros((len(scan), len(peaklist)))
@@ -128,7 +128,7 @@ class Comparison():
 
         for j, peak in enumerate(peaklist):
             print(f"Estimating S/B for peak at {peak} keV")
-            energy_mask = np.logical_and(self.data > peak - range, self.data < peak + range)
+            energy_mask = np.logical_and(self.data > peak - width, self.data < peak + width)
             masked_scores = self.scores[energy_mask]
             masked_avse = self.avse[energy_mask]
             for i, cut in enumerate(scan):
@@ -140,7 +140,7 @@ class Comparison():
                     predictions_avse = masked_avse < cut
                     threshold = compute_threshold(masked_scores, predictions_avse.sum(), "nn")
                     predictions_nn = masked_scores > threshold
-                sb_nn[i, j], std_sb_nn[i, j] = compute_sn(self.data, predictions_nn, peak, energy_mask, range, nbins)
-                sb_avse[i,j], std_sb_avse[i, j] = compute_sn(self.data, predictions_avse, peak, energy_mask, range, nbins)
+                sb_nn[i, j], std_sb_nn[i, j] = compute_sn(self.data, predictions_nn, peak, energy_mask, width, nbins)
+                sb_avse[i,j], std_sb_avse[i, j] = compute_sn(self.data, predictions_avse, peak, energy_mask, width, nbins)
 
         return sb_nn, std_sb_nn, sb_avse, std_sb_avse
