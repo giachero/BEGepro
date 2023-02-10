@@ -137,18 +137,18 @@ def get_peak_mask(energies, peak_mean, peak_std):
     mask = np.logical_and(upper_selection, lower_selection)
     return mask
 
-def balance_dataset(wf, labels):
-    pos = wf[labels == 1]
-    neg = wf[labels == 0]
+def balance_dataset(data, labels):
+    pos = data[labels == 1]
+    neg = data[labels == 0]
     pos_labels = labels[labels == 1]
     neg_labels = labels[labels == 0]
     if np.sum(pos_labels) / labels.shape[0] > 0.5:
         pos, _, pos_labels, _ = train_test_split(pos, pos_labels, train_size = neg_labels.shape[0])
     else:
         neg, _, neg_labels, _ = train_test_split(neg, neg_labels, train_size = pos_labels.shape[0])
-    wf = np.concatenate([pos, neg])
+    data = np.concatenate([pos, neg])
     labels = np.concatenate([pos_labels, neg_labels])
-    return wf, labels
+    return data, labels
 
 class Dataset():
     def __init__(self, waveforms, energies, amplitudes, pulse_height):
@@ -174,7 +174,7 @@ class Dataset():
         test = [wf_test, en_test, am_test, ph_test]
         return train, val, test
 
-    def get_classification_sample(self, data_train, data_val, region_mse, region_sse):
+    def get_classification_sample(self, data_train, data_val, region_mse, region_sse, with_avse = False):
         energies_train = data_train[1]
         energies_val = data_val[1]
         mask_multisite_total_train = np.zeros(energies_train.shape[0])
@@ -200,8 +200,25 @@ class Dataset():
         wf_train = np.concatenate([data_train[0][mask_multisite_total_train], data_train[0][mask_singlesite_total_train] ])
         wf_val = np.concatenate([data_val[0][mask_multisite_total_val], data_val[0][mask_singlesite_total_val] ])
 
-        wf_train, label_train = balance_dataset(wf_train, label_train)
-        wf_val, label_val = balance_dataset(wf_val, label_val)
+        wf_train, label_train_bal = balance_dataset(wf_train, label_train)
+        wf_val, label_val_bal = balance_dataset(wf_val, label_val)
 
-        return wf_train, wf_val, label_train, label_val
+        if with_avse:
+            amplitudes_train = data_train[2]
+            pulse_height_train = data_train[3]
+            amplitudes_val = data_val[2]
+            pulse_height_val = data_val[3]
+
+            avse_train = amplitudes_train/ pulse_height_train
+            avse_val = amplitudes_val/ pulse_height_val
+
+            avse_train = np.concatenate([avse_train[mask_multisite_total_train], avse_train[mask_singlesite_total_train]])
+            avse_val = np.concatenate([avse_val[mask_multisite_total_val], avse_val[mask_singlesite_total_val]])
+
+            avse_train, _ = balance_dataset(avse_train, label_train)
+            avse_val, _ = balance_dataset(avse_val, label_val)
+
+            return wf_train, wf_val, label_train_bal, label_val_bal, avse_train, avse_val
+        else:
+            return wf_train, wf_val, label_train_bal, label_val_bal
         
