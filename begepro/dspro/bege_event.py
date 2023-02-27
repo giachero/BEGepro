@@ -24,7 +24,7 @@ import numpy as np
 import math as math
                     
 class BEGeEvent(object):
-    def __init__(self, n_trace, dim_trace, trace=None,curr=None, pheight=None, energy=None, amplitude=None, ae=None, risetime=None,n_peaks=None,zeros_2der=None,n_peaks_2der=None,simm=None,labels=None,index=None):
+    def __init__(self, n_trace, dim_trace, trace=None,curr=None, pheight=None, energy=None, amplitude=None, ae=None, risetime=None,n_peaks=None,zeros_2der=None,n_peaks_2der=None,simm=None,area=None,labels=None,index=None):
 
         self.__data={'trace'       : np.zeros([n_trace,dim_trace]).astype(np.int16)   if trace        is None else np.array(trace).astype(np.int16),
                      'curr'        : np.zeros([n_trace,dim_trace]).astype(np.float64) if curr         is None else np.array(curr).astype(np.float64), 
@@ -37,6 +37,7 @@ class BEGeEvent(object):
                      'zeros_2der'  : np.zeros([n_trace]).astype(np.int16)             if zeros_2der   is None else np.array(zeros_2der).astype(np.int16),
                      'n_peaks_2der': np.zeros([n_trace]).astype(np.int16)             if n_peaks_2der is None else np.array(n_peaks_2der).astype(np.int16),
                      'simm'        : np.zeros([n_trace]).astype(np.float64)           if simm         is None else np.array(simm).astype(np.float64),
+                     'area'        : np.zeros([n_trace]).astype(np.float64)           if area         is None else np.array(area).astype(np.float64),
                      'labels'      : np.zeros(n_trace).astype(np.float64)             if labels       is None else np.array(labels).astype(np.double),
                      'index'       : np.zeros([n_trace]).astype(np.int16)             if index        is None else np.array(index).astype(np.int32)}
                      
@@ -72,6 +73,7 @@ class BEGeEvent(object):
                              self.get_zeros_2der()[index],
                              self.get_n_peaks_2der()[index],
                              self.get_simm()[index],
+                             self.get_area()[index],
                              self.get_labels()[index],
                              self.get_indexes()[index])
     
@@ -105,6 +107,9 @@ class BEGeEvent(object):
         v=np.where(self.get_avse()==0)[0]
         v=np.delete(np.arange(0,self.n_trace),v)
         return self.subset('ae',index=v)
+        
+    def calibrate(self,calVec):
+        self.__data['energy']=calVec[0]+self.__data['pheight']*calVec[1]
 
     def add_trace(self, trace):
         return self.__add_element('trace', np.array(trace).astype(np.int16))
@@ -138,6 +143,9 @@ class BEGeEvent(object):
         
     def add_simm(self, simm):
         return self.__add_element('simm', np.float64(simm))
+        
+    def add_area(self, area):
+        return self.__add_element('area', np.float64(area))
        
     def get_data(self, key):
         return self.__data[key] if key in self.__data else None
@@ -178,6 +186,9 @@ class BEGeEvent(object):
     def get_simm(self):
         return self.get_data('simm')
         
+    def get_area(self):
+        return self.get_data('area')
+        
     def get_labels(self):
         return self.get_data('labels')
         
@@ -202,9 +213,13 @@ class BEGeEvent(object):
     def set_simm(self,simm):
         self.__data['simm']=simm
         return
+        
+    def set_energy(self,energy):
+        self.__data['energy']=energy
+        return
 
     def get_parameters(self):
-        if all(k in self.__data.keys() for k in ['pheight', 'energy', 'amplitude', 'ae', 'risetime','n_peaks','zeros_2der','n_peaks_2der','simm','index' ]):
+        if all(k in self.__data.keys() for k in ['pheight', 'energy', 'amplitude', 'ae', 'risetime','n_peaks','zeros_2der','n_peaks_2der','simm','area','index' ]):
             return np.transpose(np.matrix([self.__data['index'],
                                           self.__data['pheight'],
                                           self.__data['energy'],
@@ -214,7 +229,8 @@ class BEGeEvent(object):
                                           self.__data['n_peaks'],
                                           self.__data['zeros_2der'],
                                           self.__data['n_peaks_2der'],
-                                          self.__data['simm']
+                                          self.__data['simm'],
+                                          self.__data['area']
                                           ]))
         else:
             return None
@@ -233,6 +249,7 @@ class BEGeEvent(object):
                          np.hstack((self.get_zeros_2der(),be.get_zeros_2der())),
                          np.hstack((self.get_n_peaks_2der(),be.get_n_peaks_2der())),
                          np.hstack((self.get_simm(),be.get_simm())),
+                         np.hstack((self.get_area(),be.get_area())),
                          np.hstack((self.get_labels(),be.get_labels())),
                          np.hstack((self.get_indexes(),be.get_indexes()))
                          )
