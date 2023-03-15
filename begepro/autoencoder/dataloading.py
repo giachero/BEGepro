@@ -156,8 +156,8 @@ class Dataset():
         self.en = energies
         self.am = amplitudes
         self.ph = pulse_height
-    def train_val_test_split(self, train_frac, val_frac, test_frac):
-        scalar_data = np.vstack([self.en, self.am, self.ph]).T
+    def train_val_test_split(self, train_frac, val_frac, test_frac, split_path = None):
+        scalar_data = np.vstack([self.en, self.am, self.ph, np.arange(self.en.shape[0])]).T
         wf_train, wf_val_test, scalar_data_train, scalar_data_val_test = train_test_split(self.wf, scalar_data, train_size = train_frac, test_size = val_frac + test_frac, random_state = 42)
 
         val_frac = val_frac/(val_frac + test_frac)
@@ -172,6 +172,18 @@ class Dataset():
         train = [wf_train, en_train, am_train, ph_train]
         val = [wf_val, en_val, am_val, ph_val]
         test = [wf_test, en_test, am_test, ph_test]
+        if split_path:
+            train_mask = scalar_data_train[:,3]
+            val_mask = scalar_data_val[:,3]
+            test_mask = scalar_data_test[:,3]
+            print("Saving train, validation, test splittings in ", split_path)
+            with open(split_path+"/train.npy", "wb") as f:
+                np.save(f, train_mask)
+            with open(split_path+"/val.npy", "wb") as f:
+                np.save(f, val_mask)
+            with open(split_path+"/test.npy", "wb") as f:
+                np.save(f, test_mask)
+
         return train, val, test
 
     def get_classification_sample(self, data_train, data_val, region_mse, region_sse, with_avse = False):

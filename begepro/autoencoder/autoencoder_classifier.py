@@ -13,7 +13,7 @@ import numpy as np
 
 set_seed(42)
 
-kernel_init = RandomNormal(stddev = 0.01, mean = 0.01, seed = 42)
+kernel_init = RandomNormal(stddev = 0.01, mean = 0.1, seed = 42)
 
 def standardize_data(distribution, mu = None, std = None):
     if (mu is None) and (std is None):
