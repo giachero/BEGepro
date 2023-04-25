@@ -91,7 +91,8 @@ def compute_sn(data, selection, mu_true, energy_mask, width, nbins):
     xdata = xdata[fit_mask]
     ydata = ydata[fit_mask]
     sigma = sigma[fit_mask]
-
+    xdata = xdata[3:-3]
+    ydata = ydata[3:-3]
 
     sigma = np.sqrt(ydata)
     sigma[sigma == 0] = 1
@@ -104,7 +105,7 @@ def compute_sn(data, selection, mu_true, energy_mask, width, nbins):
     std_s = stds[0]
 
     sb = sig/bkg
-    std_sb = np.sqrt((std_s/bkg)**2 + (sig*std_b/bkg**2)**2)
+    std_sb = np.sqrt((std_s/bkg)**2 + (sig*std_b/bkg**2)**2 - sig/bkg**3*pcov[0, 1])
 
     if std_sb > sb:
         warnings.warn("The fit did not converge.")
@@ -126,6 +127,8 @@ class Comparison():
         sb_avse = np.zeros((len(scan), len(peaklist)))
         std_sb_avse = np.zeros((len(scan), len(peaklist)))
 
+        nonbenchmark_threshold = np.zeros((len(scan), len(peaklist)))
+
         for j, peak in enumerate(peaklist):
             print(f"Estimating S/B for peak at {peak} keV")
             energy_mask = np.logical_and(self.data > peak - width, self.data < peak + width)
@@ -140,7 +143,8 @@ class Comparison():
                     predictions_avse = masked_avse < cut
                     threshold = compute_threshold(masked_scores, predictions_avse.sum(), "nn")
                     predictions_nn = masked_scores > threshold
+                nonbenchmark_threshold[i,j] = threshold
                 sb_nn[i, j], std_sb_nn[i, j] = compute_sn(self.data, predictions_nn, peak, energy_mask, width, nbins)
                 sb_avse[i,j], std_sb_avse[i, j] = compute_sn(self.data, predictions_avse, peak, energy_mask, width, nbins)
 
-        return sb_nn, std_sb_nn, sb_avse, std_sb_avse
+        return sb_nn, std_sb_nn, sb_avse, std_sb_avse, nonbenchmark_threshold
