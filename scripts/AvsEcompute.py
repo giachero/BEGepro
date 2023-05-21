@@ -4,7 +4,7 @@
 
 #./AvsEcompute.py --loc ~/work/tesi/data/ -m 228Th-grafico-tesi-im260421_1 -n 265 -d ~/work/tesi/data/ -r 0
 #python3 AvsEcompute.py --loc ~/work/Data/Raw/ -m CRC01-Zebru-im22012021 -n 265 -d ~/work/Data/Analized -rT 1 -rC 1 -c 0
-#python3 AvsEcompute.py --loc ~/work/Data/Raw/ -m 228Th-grafico-tesi-im260421_1 -n 265 -d ~/work/Data/Analized -rT 1 -rC 1 -c 1
+#python3 AvsEcompute.py --loc ~/work/Data/Raw/ -m 228Th-grafico-tesi-im260421_1 -s -n 265 -d ~/work/Data/Analized -rT 1 -rC 1 -c 1
 
 import numpy as np
 import os
@@ -22,15 +22,16 @@ import matplotlib.pyplot as plt
 
 def main():
 
-    usage='./AvsEcompute.py -l /path/where/the/measurement/directory/is/ -m measurementName -n numberOfFiles -rT readTrace -rC readCurr -c calibrated'
+    usage='./AvsEcompute.py -l /path/where/the/measurement/directory/is/ -m measurementName -s start -n numberOfFiles -rT readTrace -rC readCurr -c calibrated'
     parser = argparse.ArgumentParser(description='Test script to read and analyze BEGe signals from CAEN desktop digitizer', usage=usage)
 
     parser.add_argument("-l", "--loc",    dest="dirloc",     type=str, help="Location of measurement directory", required = True)
     parser.add_argument("-m", "--meas",   dest="measname",   type=str, help="Measurement name",                  required = True)
+    parser.add_argument("-s", "--start",  dest="start",      type=int, help="Number of files where to start",    required = True)
     parser.add_argument("-n", "--nfiles", dest="nfiles",     type=int, help="Number of files to analyze",        required = True)
     parser.add_argument("-d", "--dir",    dest="savedir",    type=str, help="Path where to save analysis",       required = True)
-    parser.add_argument("-rT", "--readT",   dest="readTrace",type=int, help="Read also traces ",                 required = True)
-    parser.add_argument("-rC", "--readC",   dest="readCurr", type=int, help="Read also currents",                required = True)
+    parser.add_argument("-rT", "--readT", dest="readTrace",  type=int, help="Read also traces ",                 required = True)
+    parser.add_argument("-rC", "--readC", dest="readCurr",   type=int, help="Read also currents",                required = True)
     parser.add_argument("-c", "--calib",  dest="calibrated", type=int, help="Calibrated in energy",              required = True)
     
     args = parser.parse_args()
@@ -47,7 +48,7 @@ def main():
 
     print('\n+++++ START OF ANALYSIS +++++\n')
 
-    for i in range(0,args.nfiles): 
+    for i in range(args.start,args.nfiles): 
         
         print('*** Start of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')        
         
@@ -77,9 +78,9 @@ def main():
                 if(args.readTrace): collector.add_trace(raw_wf)
                 if(args.readCurr): collector.add_curr(curr)
 
-                plt.figure()
-                plt.plot(collector.get_traces()[i])
-                plt.show()
+                # plt.figure()
+                # plt.plot(collector.get_traces()[i])
+                # plt.show()
                 
                 curr_norm=normalize(curr)
                 raw_wf_norm=normalize(raw_wf)
