@@ -5,6 +5,7 @@ import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 import math
 
+from sklearn.metrics import confusion_matrix
 import IPython 
 
 class analysis(object):
@@ -177,12 +178,59 @@ class analysis(object):
         return {'original'  : original,
                 'AI'        : AI,
                 'ae'        : ae}
+    
+    def peak_compton2(self,coll,peak,compton):
+        plt.figure()
+        c, e, p = plt.hist(coll.get_energies(), bins=self.calVec, histtype='step')
+        plt.close('all')
+            
+        #ANALISIS
+        bin_max=np.max(c[np.where((e>peak[0]) & (e<peak[1]))[0]])
+        bounds=np.where((e>compton[0]) & (e<compton[1]))
+        original=self.evaluate_fraction((bin_max,0),(np.sum(c[bounds]),0))
+        
+        return original
         
     def evaluate_fraction(self,a,b):
         r=a[0]/b[0]
         err=math.sqrt((a[1]/b[0])**2+(a[0]*b[1]/(b[0])**2)**2)
-        return (r,err)    
+        return (r,err)   
     
+    def ROC(self, labels, predictions):
+
+        if not isinstance(predictions, np.ndarray): predictions = np.array(predictions)
+        if not isinstance(labels, np.ndarray): labels = np.array(labels)
+
+        TPR_list = []
+        FPR_list = []
+
+        for eps in np.linspace(1e-5, 1, 500):
+            pred_classes = []
+            for i in range(len(labels)):
+                pred_classes.append(labels[i] if np.abs(labels[i] - predictions[i]) < eps else np.abs(labels[i] - 1))
+                
+            TN, FP, FN, TP = confusion_matrix(labels, pred_classes).ravel()
+
+            TPR =  TP / (TP + FN)
+            FPR = FP / (FP + TN)
+
+            TPR_list.append(TPR)
+            FPR_list.append(FPR)
+        TPR_list.append(0)
+        FPR_list.append(0)
+
+        
+        plt.figure()
+        plt.plot(FPR_list, TPR_list)
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
+        plt.title('ROC curve')
+        plt.show()
+
+        return FPR_list, TPR_list
+            
+        
+            
     
     
     
