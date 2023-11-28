@@ -1,4 +1,5 @@
 import numpy as np
+import pylab as plt
 from scipy.signal import savgol_filter
 import peakutils as pu
 import re
@@ -34,7 +35,12 @@ class simm(object):
         o_der=second_derivative()
         der=o_der.compute_der(self.conf)
         der=o_der.compute_der(der)
-        self.m_conf=np.where(der==np.min(der))[0][0]    
+        self.m_conf=np.where(der[0][0]==np.min(der[0][0]))[0][0]
+        # print('m_conf ', self.m_conf)
+        # print(der[0])
+        # plt.figure()
+        # plt.plot(der[0][0])
+        # plt.show()    
         return
         
     def compute_simm(self,trace):        
@@ -49,12 +55,33 @@ class simm(object):
         diff=abs(m_trace-self.m_conf)
         if(m_trace>self.m_conf):
             v=trace[diff:]
+            simm=sum(abs(self.conf[:len(self.conf)-diff]-v)) / (len(self.conf) - diff)
+        else:
+            v=self.conf[diff:]
+            simm=sum(abs(trace[:len(self.conf)-diff]-v)) / (len(self.conf) - diff)
+ 
+        return simm
+    
+
+    # Normalize for length
+    def compute_simm_shifted(self,trace,der2 = None):
+        if der2 is None:
+            der2 = second_derivative().compute_der(trace)[0]      
+        trace=savgol_filter(trace,30,0)
+        m_trace=np.where(der2==min(der2))[0][0]
+        
+        diff=abs(m_trace-self.m_conf) * 4
+
+        greater = m_trace > self.m_conf
+        if(m_trace>self.m_conf):
+            v=trace[diff:]
             simm=sum(abs(self.conf[:len(self.conf)-diff]-v))
+
         else:
             v=self.conf[diff:]
             simm=sum(abs(trace[:len(self.conf)-diff]-v))
- 
-        return simm
+            
+        return simm, diff, greater
         
 class second_derivative(object):
     def __init__(self):
@@ -99,11 +126,17 @@ class second_derivative(object):
         
         return simpson(f/max(f))
         
-    def compute_n_peaks(self,f,t):
-        der2=abs(f)
-        der2=der2/max(f)   
-        indexes=find_peaks(f,distance=10,height=0.1)[0]
+    def compute_n_peaks(self,f):
+        der2 = abs(f)
+        der2 = norm_signal(der2)   
+        indexes=find_peaks(der2, distance=10, height=0.1)[0]
         return indexes.astype(np.int16)
+    
+
+def norm_signal(signal):
+    signal = signal - min(signal)
+    signal = signal / max(signal)
+    return signal
              
         
         
