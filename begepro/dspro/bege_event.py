@@ -104,9 +104,17 @@ class BEGeEvent(object):
         return
         
     def remove_zeros(self):
-        v=np.where(self.get_avse()==0)[0]
-        v=np.delete(np.arange(0,self.n_trace),v)
-        return self.subset('ae',index=v)
+        v = np.where(self.get_avse()==0)[0]
+        v = np.delete(np.arange(0,self.n_trace),v)
+        self.n_trace = self.n_trace - len(v)
+        return self.subset('ae', index = v)
+    
+    def normalize_traces(self):
+        traces = self.__data['trace']
+        traces = (traces.transpose() - traces.min(axis=1)).transpose()
+        traces = (traces.transpose() / traces.max(axis=1)).transpose()
+        print(traces)
+        self.__data['trace'] = traces
         
     def calibrate(self,calVec):
         self.__data['energy']=calVec[0]+self.__data['pheight']*calVec[1]
