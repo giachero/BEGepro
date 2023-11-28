@@ -4,7 +4,7 @@
 
 #./AvsEcompute.py --loc ~/work/tesi/data/ -m 228Th-grafico-tesi-im260421_1 -n 265 -d ~/work/tesi/data/ -r 0
 #python3 AvsEcompute.py --loc ~/work/Data/Raw/ -m CRC01-Zebru-im22012021 -n 265 -d ~/work/Data/Analized -rT 1 -rC 1 -c 0
-#python3 AvsEcompute.py --loc ~/work/Data/Raw/ -m 228Th-grafico-tesi-im260421_1 -s -n 265 -d ~/work/Data/Analized -rT 1 -rC 1 -c 1
+#python3 AvsEcompute.py --loc ~/work/Data/Raw/ -m 228Th-grafico-tesi-im260421_1 -s 35 -n 265 -d ~/work/Data/Analized -rT 1 -rC 1 -c 1
 
 import numpy as np
 import os
@@ -71,42 +71,28 @@ def main():
                 raw_wf            = np.array(data['trace'])   
                 curr              = flt.curr_filter(raw_wf)          
                 pulse_height      = data['pulseheight']
-                energy            = data['energy'] if args.calibrated else 0
+                energy            = data['energy'] if args.calibrated else -1
                 amplitude         = np.max(curr)
                 avse              = amplitude / pulse_height 
                 
                 if(args.readTrace): collector.add_trace(raw_wf)
                 if(args.readCurr): collector.add_curr(curr)
+                
+                # curr_norm = normalize(curr)
+                raw_wf_norm = normalize(raw_wf)
 
-                # plt.figure()
-                # plt.plot(collector.get_traces()[i])
-                # plt.show()
-                
-                curr_norm=normalize(curr)
-                raw_wf_norm=normalize(raw_wf)
-                risetime,t        = rt_obj.compute_rt(raw_wf_norm,4e-9)
-                f, smooth         = nd_der_obj.compute_der(curr)
-                rt2,t2            = rt_obj.compute_rt(raw_wf_norm,4e-9,riseTimeLimits=(0.05,0.95))            
-                
-                #print(counter)
-                """
-                if counter==57:
-                    import pylab as plt
-                    plt.figure()
-                    plt.plot(raw_wf)
-                    print(t[0])
-                    plt.scatter(rt_obj.prova,raw_wf[rt_obj.prova])
-                    plt.show()
-                """
+                risetime,t        = rt_obj.compute_rt(raw_wf_norm, 4e-9)
+                der2, _           = nd_der_obj.compute_der(curr)
+                # rt2, t2           = rt_obj.compute_rt(raw_wf_norm,4e-9,riseTimeLimits=(0.05,0.95))
             
-                zeros_2der        = len(nd_der_obj.compute_n_zeros(f, t))                                                
+                zeros_2der        = -1 #len(nd_der_obj.compute_n_zeros(der2, t))                                                
                 n_peaks           = -1 #len(peaks_obj.compute_n_peaks(curr,energy,E,maxlim))
                            
-                n_peaks_2der      = len(nd_der_obj.compute_n_peaks(f,t2))
-                simm              = simm_obj.compute_simm2(raw_wf_norm,f)         
-                area              = nd_der_obj.compute_area(normalize(f))                         
+                n_peaks_2der      = len(nd_der_obj.compute_n_peaks(der2))
+                simm              = simm_obj.compute_simm2(raw_wf_norm, der2)         
+                area              = -1 #nd_der_obj.compute_area(normalize(f))
+
                 collector.add_pulse_height(pulse_height)
-                
                 collector.add_energy(energy)
                 collector.add_amplitude(amplitude)
                 collector.add_avse(avse)
@@ -117,18 +103,26 @@ def main():
                 collector.add_area(area)
                    
                 collector.add_n_peaks(n_peaks) #len(peaks_obj.compute_n_peaks2(curr,rt_obj.compute_rt2(raw_wf,4e-9,(0.005,0.995))[1])))
+
+                # if(n_peaks_2der == 1):
+                #     plt.plot(normalize(abs(der2)))
+                #     plt.show()
+                #     plt.figure()
+                #     plt.plot(raw_wf_norm)
+                #     plt.show()
                     
             except:
-                exc_counter+=1
-                print('exc: ', exc_counter)
+                exc_counter += 1
+                print('exc: ', exc_counter, ' Signal: ', counter)
                 
-                """
-                import pylab as plt
-                plt.figure()
-                plt.plot(raw_wf)
-                print(t)
-                plt.scatter(rt_obj.prova,raw_wf[rt_obj.prova])            
-                plt.savefig('/home/marco/work/tesi/images/exceptions/img_'+str(counter)+'.png')"""
+                # if(i == 70):
+                #     import pylab as plt
+                #     plt.figure()
+                #     plt.plot(f)
+                #     print('peaks ', n_peaks_2der)
+                #     plt.show()
+                    # plt.scatter(rt_obj.prova,raw_wf[rt_obj.prova])            
+                    # plt.savefig('/home/marco/work/tesi/images/exceptions/img_'+str(counter)+'.png')
             
             #if counter==22: break #IPython.embed()
                   
@@ -139,7 +133,7 @@ def main():
 
         print('*** End of file ' + str(i+1) + '/' + str(args.nfiles) + ' ***')
         
-        collector.remove_zeros()    
+        collector = collector.remove_zeros()    
         collector.update_index()
     
         np.save(args.savedir + args.measname+'__'+str(i), collector.get_parameters())
