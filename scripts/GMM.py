@@ -3,6 +3,7 @@
 from begepro.rw import CAENhandler_new  as ca
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
@@ -33,6 +34,9 @@ def main():
     # To decide the radioactive source
     crioconite = False
 
+    # To decide if you want to plot the parameters in a 3d plot
+    d3 = True
+
     # To decide if you want to compute the best cut over GMM output
     compute = False
 
@@ -61,8 +65,8 @@ def main():
     # I make use of the class numpy reader that reads the signals from a numpy and returns an object bege event which 
     # is basically a data collector
     # If crioconite is loaded i perform the calibration
-    startFile = 40
-    endFile = 70
+    startFile = 0
+    endFile = 29 # 29 for 1.5M crioconyte events
     for i in range(startFile, endFile):
         if(crioconite):
             dir = '/home/marco/work/Data/Analized/Crioconite/'
@@ -84,6 +88,8 @@ def main():
     # This istruction is necessary in order to correctly set up data. In the data collector there are some null events to to
     # a very basic prefiltering that i implemented (i discard some noisy data)
     coll_tot = coll_tot.subset('energy',Emin,Emax).remove_zeros()
+    if crioconite: coll_tot = coll_tot.subset('ae', index=range(1500000))
+    print('Number of events: ', coll_tot.n_trace)
 
     # Get the parameters    
     matrix=coll_tot.get_parameters()
@@ -111,6 +117,30 @@ def main():
     print(df_par)
     del(df)
     X = np.array(df_par)
+
+    ###########
+    # 3D PLOT #
+    ###########
+
+    if(d3):
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(X[:, 0][0 : 10000], X[:, 1][0 : 10000], X[:, 2][0 : 10000], alpha = 0.1)
+        ax.set_ylabel('Difference')
+        ax.set_zlabel('Number of peaks')
+        ax.set_xlabel('Risetime')
+        plt.show()
+
+    # pd_trainin_data = pd.DataFrame(np_training_data, 
+    #                            columns = ['feat0', 'feat1', 'feat2', 'feat3', 'feat4', 'label'])
+    scatter_colors = {0: 'blue', 1: 'red'}
+
+    plot = sns.pairplot(df_par, 
+                        palette = scatter_colors, plot_kws={"s": 4, "alpha": 0.005, "rasterized": True}, 
+                        diag_kws={"alpha": 0.1, "bins": 100}, vars=['simm', 'n_peaks_2der', 'risetime'], 
+                        diag_kind="hist", corner=True, height=1)
+
+
 
     ###########################
     # GAUSSIAN MIXTURE MODELS #
@@ -187,10 +217,16 @@ def main():
     print(coll_tot.get_labels())
 
     # Show them
+    fs = 14
+    plt.rcParams['axes.linewidth'] = 1.5
     plt.figure()
-    plt.hist(coll_tot.get_labels(),color='b',alpha=1,bins=np.arange(0,1.1,0.005),density=True)
-    plt.xlabel('Label')
-    plt.ylabel('Normalized counts')
+    plt.hist(coll_tot.get_labels(),color='b',alpha=1,bins=np.arange(0,1.1,0.005),density=False)
+    plt.xlabel('Label',fontsize=fs)
+    plt.ylabel('Normalized counts',fontsize=fs)
+    plt.semilogy()
+    #plt.ylim(0,150)
+    plt.tight_layout()
+
     plt.show()
 
     ############
@@ -232,23 +268,25 @@ def main():
         cut = np.linspace(0.01, 1, 100)[np.argmax(peak_compton_list)]
         print('Computed ', cut)
     else:
-        cut = 0.1
+        cut = 0.5
 
     # I want to save the MSE as class 0. So I cycle until done
-    while(True):
+    cond = False
+    while(not cond):
         # Invert labels
         coll_tot.set_labels(1 - coll_tot.get_labels())
         plt.figure()
         c_or, e_or, p_or = plt.hist(coll_tot.get_energies(), bins=calVec, histtype='step', label='original')
-        c_CNN, e_CNN, p_CNN = plt.hist(coll_tot.subset('labels', 0, cut).get_energies(), bins=calVec, histtype='step', label='Cut GMM')
+        c_GMM, e_GMM, p_GMM = plt.hist(coll_tot.subset('labels', 0, cut).get_energies(), bins=calVec, histtype='step', label='Cut GMM')
         plt.xlim(Emin, Emax)
         plt.legend()
         plt.semilogy()
         plt.show()
-        if input("Are MSE class 0? "): break
+        cond = int(input("Are MSE class 0? "))
     
     # Save the energies
-    filename = '/home/marco/work/Data/SavedEvents/GMM_energies.npy'
+    filename = '/home/marco/work/Data/SavedEvents/GMM_energies_' + 'Cr_' if crioconite else 'Th'
+    filename = filename + '.npy'
     np.save(filename, coll_tot.subset('labels', 0, cut).get_energies())
 
 
@@ -270,7 +308,7 @@ def main():
     # j=int(input())
     # coll_tot.set_labels(1-labels[:,j])
     
-    # #HIST OF LABELS
+    # #HIST OF LABELSF
     # plt.figure()
     # plt.hist(coll_tot.get_labels(),color='b',alpha=1,bins=np.arange(0,1.1,0.005),density=True)
     # plt.xlabel('Label')
