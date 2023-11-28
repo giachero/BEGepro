@@ -106,7 +106,7 @@ def main():
     # index = random.sample(range(coll_SSE.n_trace),coll_MSE.n_trace)
     # coll_SSE = coll_SSE.subset('ae', index = index)
 
-    # Check if the dataset is balances
+    # Check if the dataset is balanced
     print(coll_MSE.n_trace)
     print(coll_SSE.n_trace)
      # Visualize the regions where the data was taken
