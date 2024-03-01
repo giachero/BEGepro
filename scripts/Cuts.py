@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import mixture
 import matplotlib.colors as clr
 from begepro.dspro import bege_event as be
+from scipy.optimize import curve_fit
 
 
 import psutil
@@ -24,10 +25,14 @@ import IPython
 from begepro.dspro import histfit as hf
 from begepro.dspro import utils_analysis as ua
 
-a=-0.090383
-b=0.20574
-calVec = [a + b*i for i in range(2**14+1)]
 crioconite=True
+
+def gausConst(x, ngaus, mu, sigma, p0):
+    return gaus(x, ngaus, mu, sigma) + p0
+
+def gaus(x, ngaus, mu, sigma):
+    gaus = ngaus / np.sqrt(2. * np.pi * sigma ** 2) * np.exp(- 0.5 * ((x - mu) / (sigma)) ** 2)
+    return gaus
 
 def main():
 
@@ -45,12 +50,13 @@ def main():
     compute = True
 
     # To decide if rebin the histograms or not
-    rebin = True
+    rebin = False
 
     # Calibration curve to calibrate crioconites (data are in adc channels)
     a=-0.090383
     b=0.20574
     calVec = [a + b*i for i in range(2**14+1)]
+    calVecTry = [i for i in range(2**14+1)]
 
     # Setting the correct range of energies of analisis
 
@@ -72,13 +78,17 @@ def main():
         
         # Best ae cut
         ae_cut = 0.01441559398334617
+
+        # Useful stuff
+        live_time = 377493 * 0.71 #255172 * 0.71
+        eff_br = {'666': 0.0318,
+                  '609': 0.0152,
+                  '480': 0.0053,
+                  '354': 0.0247}
         
         # Gaussian initialization of parameters
 
-        global shape, bkg, pars_dic, xlim_dic
-
-        shape = 'step'
-        bkg = 'const'
+        global models_dic, pars_dic, xlim_dic
 
         # 666 keV
 
@@ -102,18 +112,15 @@ def main():
         
         pars_609_or =  {'ngaus': 10e3,
                        'mu'   : 609,
-                       'sigma': 2,           
-                       'cstep': 100,            
+                       'sigma': 2,            
                        'p0'   : 1000}
         pars_609_ACM =  {'ngaus': 10e3,
                        'mu'   : 609,
-                       'sigma': 2,           
-                       'cstep': 100,            
+                       'sigma': 2,            
                        'p0'   : 1000}
         pars_609_GMM =  {'ngaus': 10e3,
                        'mu'   : 609,
-                       'sigma': 2,           
-                       'cstep': 100,            
+                       'sigma': 2,            
                        'p0'   : 1000}
         
         # 480 keV
@@ -136,23 +143,33 @@ def main():
         
         # 351 keV
         
-        pars_351_or =  {'ngaus': 10e4,
-                       'mu'   : 351,
-                       'sigma': 5,           
-                       'cstep': 500,            
-                       'p0'   : 1000}
+        pars_351_or =  {'ngaus': 8000,
+                       'mu'   : 354,
+                       'sigma': 0.3,                       
+                       'p0'   : 600}
         pars_351_ACM =  {'ngaus': 10e4,
                        'mu'   : 351,
-                       'sigma': 5,           
-                       'cstep': 500,            
+                       'sigma': 5,                       
                        'p0'   : 1000}
         pars_351_GMM =  {'ngaus': 10e4,
-                       'mu'   : 351,
-                       'sigma': 5,           
-                       'cstep': 500,            
+                       'mu'   : 354,
+                       'sigma': 0.5,                       
                        'p0'   : 1000}
 
-        # Dictionaries containing all the dictionaries         
+        # Dictionaries containing all the dictionaries
+        models_dic = {'models_666_or': ('step','const'),
+                    'models_666_ACM': ('step','const'),
+                    'models_666_GMM': ('step','const'),
+                    'models_609_or': ('gaus','const'),
+                    'models_609_ACM': ('gaus','const'),
+                    'models_609_GMM': ('gaus','const'),
+                    'models_480_or': ('gaus','const'),
+                    'models_480_ACM': ('step','const'),
+                    'models_480_GMM': ('step','const'),
+                    'models_351_or': ('gaus','const'),
+                    'models_351_ACM': ('gaus','const'),
+                    'models_351_GMM': ('gaus','const')
+                    }
         pars_dic = {'pars_666_or': pars_666_or,
                     'pars_666_ACM': pars_666_ACM,
                     'pars_666_GMM': pars_666_GMM,
@@ -169,7 +186,7 @@ def main():
         xlim_dic = {'xlim_666': (636, 696),
                     'xlim_609': (600, 630),
                     'xlim_480': (465, 495),
-                    'xlim_351': (345, 360)
+                    'xlim_351': (348, 357)
                     }
         
     else:
@@ -209,7 +226,7 @@ def main():
                     'sigma': 2,           
                     'p0'   : 10**1}
 
-        # Dictionaries containing the other ones                
+        # Dictionaries containing the other ones            
         peak_dic = {'pars_Tl': pars_Tl, 'pars_fe': pars_fe, 'pars_Bi': pars_Bi, 'pars_de': pars_de}
         xlim_dic = {'pars_Tl': (2580,2625),'pars_fe': (2094,2114),'pars_Bi': (1611,1631),'pars_de': (1583,1603)}
 
@@ -243,8 +260,10 @@ def main():
     # This istruction is necessary in order to correctly set up data. In the data collector there are some null events to to
     # a very basic prefiltering that i implemented (i discard some noisy data)
     coll_tot = coll_tot.subset('energy',Emin,Emax).remove_zeros()
+    n = coll_tot.n_trace
     if crioconite: coll_tot = coll_tot.subset('ae', index=range(1500000))
     print('Events Original: ', coll_tot.n_trace)
+    print('Percentage keeped: ', coll_tot.n_trace / n)
 
     # Loading as bege events several saved energies of different AI models
 
@@ -290,7 +309,7 @@ def main():
 
     # Necessary to rebin the histogram and enhance the background reduction 
     calVecR = np.array(calVec)
-    if rebin: calVecR = calVecR[range(0, calVecR.shape[0], 6)]
+    if rebin: calVecR = calVecR[range(0, calVecR.shape[0], 3)]
 
     # Object in which there is the method peak_compton2 which doesn't make use of fits, but evaluates it as
     # counts of the higher bin of the peak / summation of counts in the bins the constitutes the Compton
@@ -321,6 +340,7 @@ def main():
     plt.rcParams['axes.linewidth'] = 2
     lw = 2
     c_or, e_or, p_or = plt.hist(coll_tot.get_energies(), bins = calVecR, histtype='step', label = 'Original', linewidth=lw)
+    print('COUNTS CALIBRATED:', np.sum(c_or))
     c_auto, e_auto, p_auto = plt.hist(collAutoencoder.get_energies(), bins = calVecR, histtype = 'step', label = 'ACM', color = 'r', linewidth=lw)
     # c_CNN, e_CNN, p_CNN = plt.hist(collCNN.get_energies(), bins = calVecR, histtype = 'step', label = 'CNN', linewidth=lw)
     c_GMM, e_GMM, p_GMM = plt.hist(collGMM.get_energies(), bins = calVecR, histtype = 'step', label = 'GMM', linewidth=lw)
@@ -337,14 +357,14 @@ def main():
     original_max = np.max(c_or)
     auto_max = np.max(c_auto)
     GMM_max = np.max(c_GMM)
+    fits = list()
 
-    counts_or_666 = fit(c_or, e_or, 666, 'or', plot = False)
-    counts_auto_666 = fit(c_auto, e_auto, 666, 'ACM', plot = False)
-    counts_GMM_666 = fit(c_GMM, e_GMM, 666, 'GMM', plot = False)
-
-    counts_or_609 = fit(c_or, e_or, 609, 'or', plot = False)
-    counts_auto_609 = fit(c_auto, e_auto, 609, 'ACM', plot = False)
-    counts_GMM_609 = fit(c_GMM, e_GMM, 609, 'GMM', plot = False)
+    peak_or_351, counts_or_351 = fit(c_or, e_or, 351, 'or', fits, plot = True, plot_components=False)
+    print(peak_or_351.get_parameters())
+    print(peak_or_351.get_parameters()['sigma']['opt_value'])
+    print(peak_or_351.get_parameters().keys())
+    peak_auto_351, counts_auto_351 = fit(c_auto, e_auto, 351, 'ACM', fits, plot = False, plot_components=False)
+    peak_GMM_351, counts_GMM_351 = fit(c_GMM, e_GMM, 351, 'GMM', fits, plot = False, plot_components=False)
 
     # peak = hf.HistogramFitter(c_auto,e_auto)
     # peak.set_model(('step','no'), xlim = xlim_dic['xlim_480'], initpars = pars_dic['pars_480_ACM'])
@@ -353,12 +373,33 @@ def main():
     # peak.plot_fit()
     # peak.plot_components()
 
-    counts_auto_480 = fit(c_auto, e_auto, 480, 'ACM', plot = True)
-    counts_GMM_480 = fit(c_GMM, e_GMM, 480, 'GMM', plot = True)
+    fits.append(None)
+    peak_auto_480, counts_auto_480 = fit(c_auto, e_auto, 480, 'ACM', fits, plot = False, plot_components=False)
+    peak_GMM_480, counts_GMM_480 = fit(c_GMM, e_GMM, 480, 'GMM', fits, plot = False, plot_components=False)
 
-    counts_or_351 = fit(c_or, e_or, 351, 'or', plot = False)
-    counts_auto_351 = fit(c_auto, e_auto, 351, 'ACM', plot = False)
-    counts_GMM_351 = fit(c_GMM, e_GMM, 351, 'GMM', plot = False)
+    peak_or_609, counts_or_609 = fit(c_or, e_or, 609, 'or', fits, plot = False, plot_components=False)
+    print('\n')
+    print(peak_or_609.get_parameters())
+    peak_auto_609, counts_auto_609 = fit(c_auto, e_auto, 609, 'ACM', fits, plot = False, plot_components=False)
+    peak_GMM_609, counts_GMM_609 = fit(c_GMM, e_GMM, 609, 'GMM', fits, plot = False, plot_components=False)
+
+    peak_or_666, counts_or_666 = fit(c_or, e_or, 666, 'or', fits, plot = False, plot_components=False)
+    peak_auto_666, counts_auto_666 = fit(c_auto, e_auto, 666, 'ACM', fits, plot = False, plot_components=False)
+    peak_GMM_666, counts_GMM_666 = fit(c_GMM, e_GMM, 666, 'GMM', fits, plot = False, plot_components=False)
+
+    # Check fits parameters
+    print('CHECK FITS')
+    print('peak_or_351 ', check_fit(peak_or_351))
+    print('peak_auto_351 ', check_fit(peak_auto_351))
+    print('peak_GMM_351 ', check_fit(peak_GMM_351))
+    print('peak_auto_480 ', check_fit(peak_auto_480))
+    print('peak_GMM_480 ', check_fit(peak_GMM_480))
+    print('peak_or_609 ', check_fit(peak_or_609))
+    print('peak_auto_609 ', check_fit(peak_auto_609))
+    print('peak_GMM_609 ', check_fit(peak_GMM_609))
+    print('peak_or_666 ', check_fit(peak_or_666))
+    print('peak_auto_666 ', check_fit(peak_auto_666))
+    print('peak_GMM_666 ', check_fit(peak_GMM_666))
 
     print('\n')
     print(' Counts original 666 keV:', counts_or_666)
@@ -389,13 +430,26 @@ def main():
     print('Peak reduction fit:')
     frac = evaluate_fraction(counts_auto_666, counts_or_666)
     print('Auto / Original: %f +- %f'%(frac[0], frac[1]))
-    frac = evaluate_fraction(counts_GMM_666,counts_or_666)
+    frac = evaluate_fraction(counts_GMM_666, counts_or_666)
     print('GMM / Original: %f +- %f'%(frac[0], frac[1]))
     
     print('\n')
     print('Compton reduction:')
     print('Auto / Original: %f'%(compton_counts(e_auto, c_auto, compton) / compton_counts(e_or, c_or, compton)))
     print('GMM / Original: %f'%(compton_counts(e_GMM, c_GMM, compton) / compton_counts(e_or, c_or, compton)))
+
+    print('\n')
+    bin_spacing = e_or[1] - e_or[0]
+    print('Activities')
+    print('Activity 351 or: ', activity(counts_or_351, 25.7e-3, eff_br['354'], live_time))
+    print('Activity 609 or: ', activity(counts_or_609, 25.7e-3, eff_br['609'], live_time))
+    print('Activity 666 or: ', activity(counts_or_666, 25.7e-3, eff_br['666'], live_time))
+    print('Activity 351 auto: ', activity(counts_auto_351, 25.7e-3, eff_br['354'], live_time))
+    print('Activity 609 auto: ', activity(counts_auto_609, 25.7e-3, eff_br['609'], live_time))
+    print('Activity 666 auto: ', activity(counts_auto_666, 25.7e-3, eff_br['666'], live_time))
+    print('Activity 351 GMM: ', activity(counts_GMM_351, 25.7e-3, eff_br['354'], live_time))
+    print('Activity 609 GMM: ', activity(counts_GMM_609, 25.7e-3, eff_br['609'], live_time))
+    print('Activity 666 GMM: ', activity(counts_GMM_666, 25.7e-3, eff_br['666'], live_time))
 
     # print('Auto / Original: '+str(evaluate_fraction(counts_auto,counts_or_666)[0])+' +- '+str(evaluate_fraction(counts_auto,counts_or_666)[1]))
     # print('GMM / Original: '+str(evaluate_fraction(counts_GMM,counts_or_666)[0])+' +- '+str(evaluate_fraction(counts_GMM,counts_or_666)[1]))
@@ -420,8 +474,8 @@ def main():
     plt.tick_params(axis='both', labelsize=fs)
 
     plt.xlabel('Energy [keV]', fontsize=fs)
-    plt.xlim(450, 510)
-    plt.ylim(10e2, 10e3)
+    # plt.xlim(450, 510)
+    # plt.ylim(10e2, 10e3)
     plt.legend(loc = 1)
     plt.ylabel('Counts / 1.23 KeV', fontsize=fs)
     title = 'Cryoconite' if crioconite else '228Th'
@@ -429,6 +483,69 @@ def main():
     plt.show()
 
     print(calVecR[1]-calVecR[0])
+
+    # Grid of fits
+
+    fig, axs = plt.subplots(3,4)
+    plt.subplots_adjust(wspace = 0.265, hspace=0.1)
+
+    fits = np.array(fits).reshape(4,3)
+    lw = 2
+    fs = 12
+
+    for j in range(4): 
+        axs[0][j].hist(coll_tot.get_energies(), bins = calVecR, histtype='step', label = 'Original', linewidth=lw)
+        if j != 1: 
+            fits[:, 0][j].plot_fit(plot = axs[0][j], lw = lw)
+
+    for j in range(4): 
+        axs[1][j].hist(collAutoencoder.get_energies(), bins = calVecR, histtype = 'step', label = 'ACM', color = 'r', linewidth=lw)
+        fits[:, 1][j].plot_fit(plot = axs[1][j], lw = lw)
+    for j in range(4): 
+        axs[2][j].hist(collGMM.get_energies(), bins = calVecR, histtype = 'step', label = 'GMM', color = 'orange', linewidth=lw)
+        fits[:, 2][j].plot_fit(plot = axs[2][j], lw = lw)
+
+    row_labels = ('Original', 'ACM', 'GMM')
+    col_labels = ('351 keV', '480 keV', '609 keV', '666 keV')
+    for j, ax in enumerate(axs[0, :]):
+        ax.annotate(col_labels[j], xy=(0.5, 1), xytext=(0, 10),
+                    xycoords='axes fraction', textcoords='offset points',
+                    ha='center', va='center', fontsize=fs)
+
+    # Add labels for rows
+
+    for i, ax in enumerate(axs[:, 0]):
+        ax.annotate(row_labels[i], xy=(0, 0.5), xytext=(-ax.yaxis.labelpad -0 if i==0 else -17, 0),
+                    xycoords=ax.yaxis.label, textcoords='offset points',
+                    ha='center', va='center', rotation=90, fontsize=fs)
+    
+    for i in axs:
+        for ax in i:
+            ax.tick_params(axis='both', which = 'both', labelsize=fs)
+            # ax.tick_params(axis='both', which = 'minor', labelsize=10)
+            
+    for a in axs[:,0]: 
+        a.set_xlim(peak_or_351.get_parameters()['mu']['opt_value']-10, peak_or_351.get_parameters()['mu']['opt_value']+10)
+        a.set_ylim(1.1e2, 1e4)
+
+    for i,a in enumerate(axs[:,1]): 
+        a.set_xlim(470, 490)
+        if i != 0: a.set_ylim([5e2, 1e3])
+
+    for a in axs[:,2]: 
+        a.set_xlim(peak_or_609.get_parameters()['mu']['opt_value']-10, peak_or_609.get_parameters()['mu']['opt_value']+10)
+        a.set_ylim(9e1, 5e3)
+
+    for a in axs[:,3]: 
+        a.set_xlim(peak_or_666.get_parameters()['mu']['opt_value']-10, peak_or_666.get_parameters()['mu']['opt_value']+10)
+
+    for i in range(3):
+        for j in range(4):
+            axs[i][j].semilogy()
+            if i != 2: axs[i][j].set_xticklabels([])
+    axs[0][0].set_ylim(1e3,8e3)
+
+    plt.show()
 
     ######################
     # IGNORE FROM NOW ON #
@@ -508,16 +625,31 @@ def compton_counts(e_hist, c_hist, compton):
     bounds = np.where((e_hist>compton[0]) & (e_hist<compton[1]))
     return np.sum(c_hist[bounds])
 
-def fit(c_or, e_or, energy, model, plot = False, plot_components = False):
+def fit(c_or, e_or, energy, model, fits, plot = False, plot_components = False):
+    s_models = 'models_' + str(energy) + '_' + model
     s_lim = 'xlim_' + str(energy)
     s_pars = 'pars_' + str(energy) + '_' + model
-    peak = hf.HistogramFitter(c_or,e_or)
-    peak.set_model((shape,bkg), xlim = xlim_dic[s_lim], initpars = pars_dic[s_pars])
+    peak = hf.HistogramFitter(c_or, e_or, e_or[1]-e_or[0])
+    peak.set_model(models_dic[s_models], xlim = xlim_dic[s_lim], initpars = pars_dic[s_pars])
     peak.fit()
     if plot: peak.plot_fit()
     if plot_components: peak.plot_components()
-    
-    return peak.net_counts()
+    fits.append(peak)
+    return peak, peak.net_counts()
+
+def check_fit(pars):
+    pars = pars.get_parameters()
+    for k in pars.keys():
+        if pars[k]['opt_value'] < 0:
+            # print('value ', pars[k]['opt_value'])
+            return False
+    return True
+
+def activity(counts, m, br_times_eff, t):
+    act = counts[0] / (m * br_times_eff * t)
+    err = np.sqrt((counts[1] / (m * br_times_eff * t))**2 + (act * 0.05)**2)
+    return act, err
+
             
 
 if __name__ == '__main__':
