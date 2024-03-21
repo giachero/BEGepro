@@ -12,6 +12,7 @@ from sklearn import mixture
 import matplotlib.colors as clr
 from begepro.dspro import bege_event as be
 from scipy.optimize import curve_fit
+from matplotlib.text import Text
 
 
 import psutil
@@ -50,7 +51,7 @@ def main():
     compute = True
 
     # To decide if rebin the histograms or not
-    rebin = False
+    rebin = True
 
     # Calibration curve to calibrate crioconites (data are in adc channels)
     a=-0.090383
@@ -186,7 +187,7 @@ def main():
         xlim_dic = {'xlim_666': (636, 696),
                     'xlim_609': (600, 630),
                     'xlim_480': (465, 495),
-                    'xlim_351': (348, 357)
+                    'xlim_351': (340, 370)
                     }
         
     else:
@@ -366,13 +367,6 @@ def main():
     peak_auto_351, counts_auto_351 = fit(c_auto, e_auto, 351, 'ACM', fits, plot = False, plot_components=False)
     peak_GMM_351, counts_GMM_351 = fit(c_GMM, e_GMM, 351, 'GMM', fits, plot = False, plot_components=False)
 
-    # peak = hf.HistogramFitter(c_auto,e_auto)
-    # peak.set_model(('step','no'), xlim = xlim_dic['xlim_480'], initpars = pars_dic['pars_480_ACM'])
-    # peak.fit()
-    # print(peak.get_parameters())
-    # peak.plot_fit()
-    # peak.plot_components()
-
     fits.append(None)
     peak_auto_480, counts_auto_480 = fit(c_auto, e_auto, 480, 'ACM', fits, plot = False, plot_components=False)
     peak_GMM_480, counts_GMM_480 = fit(c_GMM, e_GMM, 480, 'GMM', fits, plot = False, plot_components=False)
@@ -438,25 +432,48 @@ def main():
     print('Auto / Original: %f'%(compton_counts(e_auto, c_auto, compton) / compton_counts(e_or, c_or, compton)))
     print('GMM / Original: %f'%(compton_counts(e_GMM, c_GMM, compton) / compton_counts(e_or, c_or, compton)))
 
+    # bin_spacing = e_or[1] - e_or[0]
+
+    activities = {'351_or'   : activity(counts_or_351, 25.7e-3, eff_br['354'], live_time),
+                  '609_or'   : activity(counts_or_609, 25.7e-3, eff_br['609'], live_time),
+                  '666_or'   : activity(counts_or_666, 25.7e-3, eff_br['666'], live_time),
+                  '351_auto' : activity(counts_auto_351, 25.7e-3, eff_br['354'], live_time),
+                  '609_auto' : activity(counts_auto_609, 25.7e-3, eff_br['609'], live_time),
+                  '666_auto' : activity(counts_auto_666, 25.7e-3, eff_br['666'], live_time),
+                  '351_GMM'  : activity(counts_GMM_351, 25.7e-3, eff_br['354'], live_time),
+                  '609_GMM'  : activity(counts_GMM_609, 25.7e-3, eff_br['609'], live_time),
+                  '666_GMM'  : activity(counts_GMM_666, 25.7e-3, eff_br['666'], live_time)
+                }
+    
     print('\n')
-    bin_spacing = e_or[1] - e_or[0]
     print('Activities')
-    print('Activity 351 or: ', activity(counts_or_351, 25.7e-3, eff_br['354'], live_time))
-    print('Activity 609 or: ', activity(counts_or_609, 25.7e-3, eff_br['609'], live_time))
-    print('Activity 666 or: ', activity(counts_or_666, 25.7e-3, eff_br['666'], live_time))
-    print('Activity 351 auto: ', activity(counts_auto_351, 25.7e-3, eff_br['354'], live_time))
-    print('Activity 609 auto: ', activity(counts_auto_609, 25.7e-3, eff_br['609'], live_time))
-    print('Activity 666 auto: ', activity(counts_auto_666, 25.7e-3, eff_br['666'], live_time))
-    print('Activity 351 GMM: ', activity(counts_GMM_351, 25.7e-3, eff_br['354'], live_time))
-    print('Activity 609 GMM: ', activity(counts_GMM_609, 25.7e-3, eff_br['609'], live_time))
-    print('Activity 666 GMM: ', activity(counts_GMM_666, 25.7e-3, eff_br['666'], live_time))
+    for key in activities.keys():
+        print('Activity {}: {}'.format(key, activities[key]))
 
-    # print('Auto / Original: '+str(evaluate_fraction(counts_auto,counts_or_666)[0])+' +- '+str(evaluate_fraction(counts_auto,counts_or_666)[1]))
-    # print('GMM / Original: '+str(evaluate_fraction(counts_GMM,counts_or_666)[0])+' +- '+str(evaluate_fraction(counts_GMM,counts_or_666)[1]))
+    ratios = {'351_or_vs_auto' : evaluate_fraction(counts_or_351, counts_auto_351),
+              '609_or_vs_auto' : evaluate_fraction(counts_or_609, counts_auto_609),
+              '666_or_vs_auto' : evaluate_fraction(counts_or_666, counts_auto_666),
+              '351_or_vs_GMM'  : evaluate_fraction(counts_or_351, counts_GMM_351),
+              '609_or_vs_GMM'  : evaluate_fraction(counts_or_609, counts_GMM_609),
+              '666_or_vs_GMM'  : evaluate_fraction(counts_or_666, counts_GMM_666)
+            }
+    
+    print('\n')
+    print('Ratios')
+    for key in ratios.keys():
+        print('Difference {}: {}'.format(key, ratios[key]))
 
-    # print(counts_auto[0])
-    # print(counts_GMM[0])
-    # print(counts_or_666[0])
+    # Verify that activities are consistent
+    print('\n')
+    print('Activity consistency')
+    print('ACM')
+    print("351 auto ", activities['351_auto'][0] * ratios['351_or_vs_auto'][0], " vs ", activities['351_or'][0])
+    print("609 auto ", activities['609_auto'][0] * ratios['609_or_vs_auto'][0], " vs ", activities['609_or'][0])
+    print("666 auto ", activities['666_auto'][0] * ratios['666_or_vs_auto'][0], " vs ", activities['666_or'][0])
+    print('GMM')
+    print("351 GMM ", activities['351_GMM'][0] * ratios['351_or_vs_GMM'][0], " vs ", activities['351_or'][0])
+    print("609 GMM ", activities['609_GMM'][0] * ratios['609_or_vs_GMM'][0], " vs ", activities['609_or'][0])
+    print("666 GMM ", activities['666_GMM'][0] * ratios['666_or_vs_GMM'][0], " vs ", activities['666_or'][0])
 
     # OTHER EXPERIMENTAL CUTS
     # ignore them
@@ -482,7 +499,50 @@ def main():
     # plt.title(title)
     plt.show()
 
-    print(calVecR[1]-calVecR[0])
+    # Scatter ratios counts
+
+    plt.figure()
+    x = [351, 609, 661]
+    y_ACM = [ratios['351_or_vs_auto'][0], ratios['609_or_vs_auto'][0], ratios['666_or_vs_auto'][0]]
+    err_ACM =  [ratios['351_or_vs_auto'][1], ratios['609_or_vs_auto'][1], ratios['666_or_vs_auto'][1]]
+    y_GMM = [ratios['351_or_vs_GMM'][0], ratios['609_or_vs_GMM'][0], ratios['666_or_vs_GMM'][0]]
+    err_GMM =  [ratios['351_or_vs_GMM'][1], ratios['609_or_vs_GMM'][1], ratios['666_or_vs_GMM'][1]]
+    plt.scatter(x, y_ACM, color = 'r', label='ACM')
+    plt.scatter(x, y_GMM, color = 'orange', label='GMM')
+    plt.errorbar(x, y_ACM, err_ACM, color = 'r', fmt="o")
+    plt.errorbar(x, y_GMM, err_GMM, color = 'orange', fmt="o")
+
+    fit_ACM, cov = curve_fit(linearFunc, x, y_ACM, sigma=err_ACM, absolute_sigma=True)
+    inter_ACM = fit_ACM[0]
+    slope_ACM = fit_ACM[1]
+    inter_err_ACM = np.sqrt(cov[0][0])
+    slope_err_ACM = np.sqrt(cov[1][1])
+
+    fit_GMM, cov = curve_fit(linearFunc, x, y_GMM, sigma=err_GMM, absolute_sigma=True)
+    inter_GMM = fit_GMM[0]
+    slope_GMM = fit_GMM[1]
+    inter_err_GMM = np.sqrt(cov[0][0])
+    slope_err_GMM = np.sqrt(cov[1][1])
+
+    yfit_ACM = [inter_ACM + slope_ACM * i for i in x]
+    yfit_GMM = [inter_GMM + slope_GMM * i for i in x]
+    plt.plot(x, yfit_ACM, color = 'black')
+    plt.plot(x, yfit_GMM, color = 'black')
+    plt.xlabel('Energy [KeV]')
+    plt.ylabel('Counts ratio')
+    plt.legend()
+    plt.show()
+
+    # print('Reduced chi^2 ACM = ', chisq(x, yfit_ACM, inter_ACM, slope_ACM, err_y))
+    # print('Reduced chi^2 GMM = ', chisq(x, yfit_GMM, inter_GMM, slope_GMM, err_y))
+
+    factor_ACM = InterpolatelinearFunc(peak_auto_480.get_parameters()['mu']['opt_value'], inter_ACM, slope_ACM, inter_err_ACM, slope_err_ACM)
+    factor_GMM = InterpolatelinearFunc(peak_auto_480.get_parameters()['mu']['opt_value'], inter_GMM, slope_GMM, inter_err_GMM, slope_err_GMM)
+
+    print("Factor of Be for ACM is", factor_ACM)
+    print("Activity Be for ACM", activity(counts_auto_480, 25.7e-3, eff_br['480'], live_time, factor = factor_ACM))
+    print("Factor of Be for GMM is", factor_GMM)
+    print("Activity Be for GMM", activity(counts_auto_480, 25.7e-3, eff_br['480'], live_time, factor = factor_GMM))
 
     # Grid of fits
 
@@ -506,7 +566,7 @@ def main():
         fits[:, 2][j].plot_fit(plot = axs[2][j], lw = lw)
 
     row_labels = ('Original', 'ACM', 'GMM')
-    col_labels = ('351 keV', '480 keV', '609 keV', '666 keV')
+    col_labels = ('214Pb', '7Be', '214Bi', '137Cs')
     for j, ax in enumerate(axs[0, :]):
         ax.annotate(col_labels[j], xy=(0.5, 1), xytext=(0, 10),
                     xycoords='axes fraction', textcoords='offset points',
@@ -534,7 +594,7 @@ def main():
 
     for a in axs[:,2]: 
         a.set_xlim(peak_or_609.get_parameters()['mu']['opt_value']-10, peak_or_609.get_parameters()['mu']['opt_value']+10)
-        a.set_ylim(9e1, 5e3)
+        a.set_ylim(5e1, 4e3)
 
     for a in axs[:,3]: 
         a.set_xlim(peak_or_666.get_parameters()['mu']['opt_value']-10, peak_or_666.get_parameters()['mu']['opt_value']+10)
@@ -544,6 +604,8 @@ def main():
             axs[i][j].semilogy()
             if i != 2: axs[i][j].set_xticklabels([])
     axs[0][0].set_ylim(1e3,8e3)
+    old_labels = axs[0][0].get_yticklabels()
+    axs[0][0].set_yticklabels([Text(0, 10.0, '$\\mathdefault{10^{1}}$'), Text(0, 100.0, ''), Text(0, 1000.0, ''), Text(0, 10000.0, ''), Text(0, 100000.0, '$\\mathdefault{10^{5}}$')])
 
     plt.show()
 
@@ -645,10 +707,34 @@ def check_fit(pars):
             return False
     return True
 
-def activity(counts, m, br_times_eff, t):
+def activity(counts, m, br_times_eff, t, factor = None):
+    if factor is not None:
+        err_counts = np.sqrt((counts[1] * factor[0])**2 + (factor[1] * counts[0])**2)
+        counts = (counts[0] * factor[0], err_counts)
     act = counts[0] / (m * br_times_eff * t)
     err = np.sqrt((counts[1] / (m * br_times_eff * t))**2 + (act * 0.05)**2)
     return act, err
+
+def diff_activities(activity_one, activity_two):
+    diff = activity_one[0] - activity_two[0]
+    err = np.sqrt(activity_one[1] * activity_one[1] + activity_two[1] * activity_two[1])
+    return diff, err
+
+def linearFunc(x, intercept, slope):
+    y = intercept + slope * x
+    return y
+
+def chisq(x, y, inter, slope, err_y):
+    chisqr = 0
+    for i in range(len(x)):
+        chisqr += (y[i] - linearFunc(x[i], inter, slope))**2 / err_y[i]**2
+    dof = len(y) - 2
+    return chisqr / dof
+
+def InterpolatelinearFunc(x, intercept, slope, err_intercept, err_slope):
+    y = linearFunc(x, intercept, slope)
+    err = np.sqrt(err_intercept ** 2 + (err_slope * x)**2)
+    return y, err
 
             
 
